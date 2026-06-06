@@ -60,6 +60,17 @@ After any new shell, the env vars below are populated automatically.
 
 # Global Rules
 
+## Cognitive Workflow (MANDATORY)
+
+Every engineering task follows this unified pipeline. Do not skip steps.
+
+1. **ANALYZE** — Read relevant files. Trace the code path. Do not guess. Understand the root cause before touching anything.
+2. **PLAN** — Map out the logic. Identify affected areas and ordering by dependency. Present the plan for approval before executing.
+3. **EXECUTE** — Fix the cause, not the symptom. Build incrementally with clear commits. Propagate changes correctly across all affected files.
+4. **VERIFY** — Run CI checks and smoke tests. Confirm the fix via logs or output. Every change must be verified to work end-to-end.
+5. **SPECIFICITY** — Do exactly what was asked; no more, no less. Don't gold-plate. Don't under-deliver. When requirements are ambiguous, ask — but once clear, execute precisely.
+6. **PROPAGATION** — Changes that touch multiple files must update all affected imports, types, tests, and documentation in the same change set.
+
 ## Bug Fixing & Problem Solving
 
 **OVERRIDE: Do NOT default to "the simplest approach."** When encountering bugs, errors, or issues:
@@ -93,6 +104,17 @@ Half-researched answers that miss critical details or rely on outdated info are 
 
 Editing code you don't fully understand is how regressions are born. Make extra effort to read.
 
+## Architecture Principles
+
+**OVERRIDE: Follow these principles in every code change.**
+
+1. **DRY (Don't Repeat Yourself)** — Extract shared logic into reusable modules. No copy-paste. Prefer composition over inheritance.
+2. **Encapsulation** — Use accessor methods for internal state. Don't reach into objects and modify `_private` fields from outside.
+3. **Dead code removal** — Remove unused imports, functions, variables, and legacy compatibility shims. Dead code is technical debt.
+4. **Keep it minimal** — Write the simplest code that solves the problem. Don't add abstraction "just in case." Refactor only when duplication is actually happening.
+5. **Complete migrations** — When moving modules or renaming things, update ALL references in the same commit. No broken imports left behind.
+6. **Performance awareness** — Use list/map lookups instead of repeated iterations. Cache repeated computations. Avoid `+=` string concatenation in loops (use array join).
+
 ## Verify Your Work
 
 **OVERRIDE: Do NOT declare work done without verification.** After making changes:
@@ -103,6 +125,15 @@ Editing code you don't fully understand is how regressions are born. Make extra 
 4. **Test edge cases mentally** — what happens with null/undefined? Empty arrays? Invalid input? Concurrent access?
 
 "It compiles" is not verification. "I traced every code path and it handles all cases" is verification.
+
+### Standardized Summary Format (MANDATORY for Completion Reports)
+
+Every task completion (report.md) and every significant code change summary MUST include:
+
+- **[Files Changed]** — exact list of files modified, created, or deleted
+- **[Logic Altered]** — what changed and why, at the behavioral level
+- **[Verification Method]** — how this was proven to work (tests run, manual steps, logs checked)
+- **[Residual Risks]** — what could still go wrong, what wasn't tested, edge cases to watch. If none, state "None."
 
 ## Don't Hallucinate APIs
 
@@ -140,6 +171,17 @@ For small, obvious changes (rename a variable, fix a typo, add a log line) — j
 
 "Confidence and conviction before construction" — if you can't defend every decision with a clear rationale, don't start building. If you find yourself saying "we'll figure that out during build," stop — you're not ready to build.
 
+### Confidence Is Earned Through Verification (MANDATORY)
+
+**OVERRIDE: Never declare confidence above 80% without prototype verification.** The difference between "should work" and "proven to work" is a prototype. Methodology:
+
+1. **Read source, not docs** — the actual code is authoritative. Read it.
+2. **Identify every unknown** — list every link in the architecture that hasn't been verified.
+3. **Prototype each unknown independently** — small, throwaway scripts that test ONE thing with real keys and real data.
+4. **Verify with real systems** — test against the actual relay, actual keypairs, actual files. Never mock.
+5. **Never skip because "it should work"** — if a function exists in code, don't assume it works — run it. Every untested assumption becomes a bug.
+6. **100% = every link prototype-verified** — only declare 100% when all unknowns are proven with real data. 95% means you still have assumptions.
+
 ## Security-First Thinking
 
 **OVERRIDE: Always consider security implications of every change.** Before writing or approving code:
@@ -162,6 +204,8 @@ Security bugs are the most expensive bugs. Think about how an attacker would abu
 4. **Architecture decisions** — if there are meaningful trade-offs (performance vs simplicity, monolith vs microservice), present the options and let Christopher decide.
 
 Building the wrong thing confidently wastes far more time than a quick clarifying question. When in doubt, ask.
+
+**Counterbalance — when requirements ARE clear, execute precisely.** Once a task is well-defined and approved, do exactly what was specified. Don't add unrequested features, don't expand scope, don't gold-plate. The time for questions is before the plan is approved — after approval, deliver exactly what was agreed.
 
 ## Task Complexity Triage — MANDATORY FIRST STEP for EVERY Task
 
