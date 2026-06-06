@@ -306,19 +306,37 @@ Edit `~/.pi/agent/AGENTS.md` to adjust rules for your setup. Key sections to per
 - `chmod` has no effect on NTFS — ignore `chmod` instructions
 - `sshpass` not included — use Node.js `ssh2` package for password-based SSH
 
-## Remote Control Bridge
+## Remote Control
 
-Optional Telegram remote control. Deploy separately:
+Optionally control pi from Telegram on your phone. Two paths:
+
+### Standalone (No VPS)
+
+Run the bot directly on your machine:
+
+```bash
+cd remote-control
+npm install
+cp .env.example .env
+# Edit .env with your Telegram credentials
+node telegram-bot.js
+```
+
+See [remote-control/README.md](remote-control/README.md) for detailed setup.
+
+### Docker on VPS
+
+For a hosted, always-on bridge:
 
 ```bash
 git clone https://github.com/TopengDev/pi-remote.git
 cd pi-remote
 cp .env.example .env
-# Edit .env with your Telegram bot token and user ID
+# Edit .env with your Telegram credentials
 docker compose up -d
 ```
 
-Then message your bot on Telegram — messages route through attn to your pi session automatically.
+See [pi-remote](https://github.com/TopengDev/pi-remote) for full documentation.
 
 ## Project Conventions
 
