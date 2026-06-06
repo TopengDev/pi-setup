@@ -84,13 +84,19 @@ Quick patches that mask the real problem are worse than no fix at all. If the pr
 
 ## Research & Information Gathering
 
-**OVERRIDE: Do NOT do shallow research.** When researching anything — a library, framework, architecture decision, bug, API, tool, or concept:
+**OVERRIDE: Do NOT do shallow research. Shallow research is worse than no research — it produces wrong answers with false confidence.** When researching anything — a library, framework, architecture decision, bug, API, tool, or concept:
 
-1. **Be ultra-thorough** — surface-level answers are not acceptable. Dig deep.
-2. **Use trusted sources** — official docs, source code, GitHub issues, changelogs, RFCs. Use the `bash` tool to curl APIs, grep codebases, read dependency source.
-3. **Cross-reference multiple sources** — don't rely on a single source. Verify claims across official docs, community discussions, and actual code.
-4. **Check recency** — your training data may be stale. Always verify against current docs and releases. If something changed recently, flag it.
-5. **Report what you found AND where you found it** — cite sources so Christopher can verify or dig deeper.
+1. **Be ultra-thorough** — surface-level answers are not acceptable. Dig deep until you have a complete and accurate picture.
+2. **Use ALL available sources** — official docs, source code (read files, not just grep), GitHub issues/discussions, changelogs, RFCs, social media (Twitter/X, Reddit, Hacker News), community forums (Discord, Stack Overflow). Exhaust every channel.
+3. **READ source code, don't just grep it** — grep finds string matches; reading finds truth. Open the files, trace the logic, understand the architecture. One line of source is worth 100 lines of documentation.
+4. **Cross-reference at least 3 independent sources** — never rely on a single source. If the docs say X but the source says Y, report the discrepancy.
+5. **Test at runtime when possible** — run the code, call the API, build the binary. Static analysis alone produces false conclusions (like assuming OpenCode doesn't read CLAUDE.md because a grep for "AGENTS" returned nothing).
+6. **Check recency** — training data is stale. Verify against current docs, releases, and changelogs. Flag any recent changes.
+7. **Report what you found AND where you found it** — cite exact file paths, line numbers, URLs. Christopher must be able to verify independently.
+8. **Acknowledge uncertainty** — if you can't find a definitive answer, say so and explain what you did try. Don't fill gaps with assumptions.
+9. **Use the internet** — you have the `bash` tool with curl. Search GitHub issues, read documentation sites, check npm/pypi registries, look at social media discussions. The terminal is a browser.
+
+**Minimum bar:** 3 independent sources, at least 1 must be source code or runtime testing. If you haven't read actual source code, your research is incomplete.
 
 Half-researched answers that miss critical details or rely on outdated info are worse than saying "I need to look deeper." When in doubt, research more, not less.
 
