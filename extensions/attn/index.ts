@@ -93,6 +93,9 @@ function connectDaemonWs(pi: ExtensionAPI): void {
           type: string;
           from?: string;
           message?: string;
+          filename?: string;
+          path?: string;
+          size?: number;
           id?: string;
           ts?: number;
           trust?: string;
@@ -103,7 +106,16 @@ function connectDaemonWs(pi: ExtensionAPI): void {
           local?: boolean;
         };
 
-        if (msg.type === 'message' && msg.from && msg.message) {
+        // File message
+        if (msg.type === 'file' && msg.from && msg.path) {
+          lastInboundFrom = msg.from;
+          const name = msg.agentName || msg.from;
+          const sizeKB = Math.round((msg.size || 0) / 1024);
+          pi.sendUserMessage(
+            `[attn] 📎 File from ${name}: ${msg.filename} (${sizeKB} KB)\nSaved to: ${msg.path}`,
+            { deliverAs: 'steer' },
+          );
+        } else if (msg.type === 'message' && msg.from && msg.message) {
           lastInboundFrom = msg.from;
 
           // Build notification summary
