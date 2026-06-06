@@ -106,59 +106,15 @@ function connectDaemonWs(pi: ExtensionAPI): void {
           local?: boolean;
         };
 
-        // File message — download from relay, decrypt, save
-        if (msg.type === 'file' && msg.from && msg.url && msg.key) {
+        // File message (daemon already downloaded, decrypted, saved)
+        if (msg.type === 'file' && msg.from && msg.path) {
           lastInboundFrom = msg.from;
           const name = msg.agentName || msg.from;
-          const filename = msg.filename || `file_${Date.now()}`;
-          
+          const sizeKB = Math.round((msg.size || 0) / 1024);
           pi.sendUserMessage(
-            `[attn] 📎 Receiving file from ${name}: ${filename}...`,
+            `[attn] 📎 File from ${name}: ${msg.filename} (${sizeKB} KB)\nSaved to: ${msg.path}`,
             { deliverAs: 'steer' },
           );
-          
-          // Download from relay, decrypt with pi's private key, save to /tmp
-          const https = require('node:https');
-          const fs = require('node:fs');
-          const path = require('node:path');
-          const os = require('node:os');
-          
-          https.get(`${msg.url}`, (res: any) => {
-            const chunks: Buffer[] = [];
-            res.on('data', (c: Buffer) => chunks.push(c));
-            res.on('end', () => {
-              try {
-                const encrypted = Buffer.concat(chunks);
-                const homeDir = os.homedir();
-                const envPath = path.join(homeDir, '.attn', '.env');
-                const envContent = fs.readFileSync(envPath, 'utf8');
-                const match = envContent.match(/ATTN_PRIVATE_KEY=(0x[a-f0-9]+)/);
-                const privateKey = match?.[1];
-                
-                if (!privateKey) {
-                  pi.sendUserMessage(`[attn] ❌ Cannot decrypt: private key not found`, { deliverAs: 'steer' });
-                  return;
-                }
-                
-                const cryptoPath = path.join(homeDir, '.pi', 'agent', 'repositories', 'attn-core', 'dist', 'crypto.js');
-                const { decryptBinary } = require(cryptoPath);
-                const decrypted = decryptBinary(privateKey as `0x${string}`, encrypted);
-                
-                const savePath = path.join(os.tmpdir(), filename);
-                fs.writeFileSync(savePath, decrypted);
-                const sizeKB = Math.round(decrypted.length / 1024);
-                pi.sendUserMessage(
-                  `[attn] 📎 File from ${name}: ${filename} (${sizeKB} KB)\nSaved to: ${savePath}`,
-                  { deliverAs: 'steer' },
-                );
-              } catch (e: any) {
-                pi.sendUserMessage(`[attn] ❌ Failed to decrypt file: ${e.message}`, { deliverAs: 'steer' });
-              }
-            });
-          }).on('error', (e: any) => {
-            pi.sendUserMessage(`[attn] ❌ Failed to download file: ${e.message}`, { deliverAs: 'steer' });
-          });
-          
           return;
         } else if (msg.type === 'message' && msg.from && msg.message) {
           lastInboundFrom = msg.from;
