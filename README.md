@@ -1,45 +1,48 @@
-# pi-setup — Chill Dawg's pi Agent Configuration
+# opencode-setup — Chill Dawg's OpenCode Configuration
 
-Complete pi coding agent rig. Skills, rules, extensions, and templates that turn a vanilla pi install into a fully-equipped development command center. Designed for Windows + Git Bash + WezTerm.
+Complete OpenCode agent configuration. Rules, commands, MCP servers, and templates that turn a vanilla OpenCode install into a fully-equipped development command center. Designed for Windows + Git Bash.
 
 ## Quick Start
 
 ```bash
-# 1. Install pi globally
-npm install -g @earendil-works/pi-coding-agent
+# 1. Install OpenCode
+npm install -g @earendil-works/opencode
 
 # 2. Clone this config
-mkdir -p ~/.pi/agent ~/.agents
-git clone https://github.com/TopengDev/pi-setup.git ~/pi-setup-tmp
+git clone https://github.com/TopengDev/pi-setup.git ~/opencode-setup-tmp
+cd ~/opencode-setup-tmp
+git checkout opencode
 
-# 3. Install skills
-cp -r ~/pi-setup-tmp/skills/* ~/.pi/agent/skills/
-cp -r ~/pi-setup-tmp/skills/* ~/.agents/skills/ 2>/dev/null || true
+# 3. Install MCP dependencies
+cd mcp && npm install && cd ..
 
-# 4. Install extensions
-cp -r ~/pi-setup-tmp/extensions/* ~/.pi/agent/extensions/
+# 4. Set up OpenCode config
+mkdir -p ~/.opencode
+cp .opencode.json ~/.opencode/opencode.json
+cp CLAUDE.md ~/.opencode/CLAUDE.md
 
-# 5. Install templates
-cp -r ~/pi-setup-tmp/notes/* ~/.pi/agent/notes/
+# 5. Set up commands
+mkdir -p ~/.opencode/commands
+cp commands/*.md ~/.opencode/commands/
 
-# 6. Install config
-cp ~/pi-setup-tmp/AGENTS.md ~/.pi/agent/AGENTS.md
+# 6. Set up templates
+mkdir -p ~/.opencode/notes/templates
+cp notes/templates/* ~/.opencode/notes/templates/
 
 # 7. Set up secrets
-cp .env.example ~/.pi/agent/secrets.env
-# Edit ~/.pi/agent/secrets.env with your API keys
+cp .env.example ~/.opencode/secrets.env
+# Edit ~/.opencode/secrets.env with your API keys
 
 # 8. Clean up
-rm -rf ~/pi-setup-tmp
+rm -rf ~/opencode-setup-tmp
 ```
 
 ## Prerequisites
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| **pi** | Coding agent CLI | `npm install -g @earendil-works/pi-coding-agent` |
+| **OpenCode** | Coding agent CLI | `npm install -g @earendil-works/opencode` |
 | **Git Bash** | Shell (MSYS2/MinGW64) | Comes with [Git for Windows](https://git-scm.com/download/win) |
-| **WezTerm** | Terminal multiplexer (worker tabs) | `winget install wez.wezterm` or [wezterm.org](https://wezterm.org) |
 | **Node.js** | Runtime (≥18) | `winget install OpenJS.NodeJS.LTS` |
 | **Git** | Version control | Comes with Git for Windows |
 
@@ -47,7 +50,7 @@ rm -rf ~/pi-setup-tmp
 
 | Tool | Purpose |
 |------|---------|
-| **Docker Desktop** | Container builds on Windows |
+| **attn daemon** | Encrypted agent-to-agent messaging (MCP) |
 | **Telegram Bot** | Remote control via [pi-remote](https://github.com/TopengDev/pi-remote) |
 
 ## Environment
@@ -55,7 +58,6 @@ rm -rf ~/pi-setup-tmp
 This config is built for:
 - **OS:** Windows 11 Pro
 - **Shell:** Git Bash (`bash.exe` from Git for Windows)
-- **Terminal:** WezTerm (multiplexing, worker tabs)
 - **Paths:** Forward slashes or properly escaped backslashes. Git Bash handles `/c/Users/...` paths.
 
 ### Shell Profile
@@ -65,19 +67,19 @@ Git Bash sources `/etc/profile` and `/etc/bash.bashrc` on startup. Create `~/.ba
 ```bash
 # ~/.bashrc
 export NODE_PATH="$(npm root -g)"
-source ~/.pi/agent/secrets.env 2>/dev/null
+source ~/.opencode/secrets.env 2>/dev/null
 ```
 
 ## Secrets
 
-All credentials live in `~/.pi/agent/secrets.env` (gitignored, never committed).
+All credentials live in `~/.opencode/secrets.env` (gitignored, never committed).
 
 ```bash
 # Copy the template
-cp .env.example ~/.pi/agent/secrets.env
+cp .env.example ~/.opencode/secrets.env
 
 # Edit with your keys
-$EDITOR ~/.pi/agent/secrets.env
+$EDITOR ~/.opencode/secrets.env
 ```
 
 ### Required Keys
@@ -92,110 +94,79 @@ $EDITOR ~/.pi/agent/secrets.env
 
 | Variable | Purpose |
 |----------|---------|
-| `OPENAI_API_KEY` | Tertiary provider |
-| `GEMINI_API_KEY` | Image generation (creative skill) |
+| `OPENAI_API_KEY` | Tertiary provider + image generation |
+| `GEMINI_API_KEY` | Image generation (creative command) |
 | `VPS_HOST` / `VPS_USER` / `VPS_PASSWORD` | Remote VPS access |
 | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ZONE_ID` | DNS management |
 
 ## Directory Layout
 
-After installation, your pi configuration lives at:
+After installation, your OpenCode configuration lives at:
 
 ```
-~/.pi/agent/
-├── AGENTS.md              # Global rules (from this repo)
+~/.opencode/
+├── opencode.json          # Providers, agents, MCP servers
+├── CLAUDE.md              # Global rules (from this repo)
 ├── secrets.env            # Credentials (NOT in repo)
-├── skills/                # Global skills
-│   ├── commit/            # Conventional commits
-│   ├── creative/          # Design asset generation
-│   ├── frontend-design/   # Production-grade UI
-│   ├── wezterm/           # Worker spawning
-│   └── ...                # (21 skills total)
-├── extensions/
-│   └── attn/              # Encrypted agent-to-agent messaging
+├── commands/              # Custom commands
+│   ├── commit.md          # Conventional commits
+│   ├── preflight.md       # Local CI/CD checks
+│   ├── tasks.md           # Task tracking
+│   ├── creative.md        # Design asset generation
+│   ├── qa.md              # Adversarial QA
+│   └── frontend-design.md # Production-grade UI
 ├── notes/
 │   ├── initiatives/       # Multi-day project tracking
 │   └── templates/         # STATE.md, initiative.md
-├── repositories/          # Project codebases
-└── tasks/                 # Task tracking artifacts
+└── repositories/          # Project codebases
 ```
 
-```
-~/.agents/skills/          # Secondary skills directory
-└── (mirrors ~/.pi/agent/skills/)
-```
+## Commands
 
-## Skills — Complete Reference
+OpenCode custom commands. Invoke with `/command-name`.
 
-### Workflow Skills
+### Workflow Commands
 
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **commit** | `/commit`, "commit changes" | Conventional commit messages, structured workflow |
-| **preflight** | "push", "verify builds" | Local CI/CD checks before pushing |
-| **ship** | "ship", "deploy", "push" | Full pipeline: security review, test, version, commit, preflight, push |
-| **project-init** | `/project-init`, "new project" | Scaffold a new project with everything needed to start |
+| Command | Trigger | What it does |
+|---------|---------|--------------|
+| **commit** | `/commit`, "commit changes" | Conventional commits with proper staging and message format |
+| **preflight** | "push", "verify builds" | Local CI/CD checks — lint, types, tests, build |
+| **tasks** | `/tasks`, "project status" | Task tracking with NOW/NEXT/LATER/WAITING columns |
 
-### Task & Project Management
+### Design & Quality Commands
 
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **tasks** | `/tasks`, "project status" | Task tracking system across all projects |
-| **daily-brief** | "daily brief", "morning" | Morning summary of yesterday + today's priorities |
-| **status-report** | "status report", "weekly update" | Weekly client status reports from actual project state |
-| **handover** | `/handover`, "hand over project" | Comprehensive project handover documentation package |
-| **remindme** | "remind me", "set reminder" | Future follow-up reminders with deadlines |
+| Command | Trigger | What it does |
+|---------|---------|--------------|
+| **frontend-design** | "build UI", "create component" | Production-grade UI — 12 vibe archetypes, typography systems, scrollytelling |
+| **creative** | `/creative`, "generate image" | AI image generation — multi-model routing, 20 hard bans, self-critique scoring |
+| **qa** | `/qa`, "test thoroughly" | Adversarial QA — quick (3 dims) or full (10 dims), P0-P4 severity report |
 
-### Design & Frontend
+## MCP — attn Messaging
 
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **frontend-design** | "build UI", "create component" | Distinctive, production-grade frontend interfaces |
-| **oneshot-webapp** | `/oneshot-webapp`, "pitch demo" | Pitch-grade demo webapps, fast |
-| **creative** | `/creative`, "generate image" | AI image generation with multi-model routing, design theory |
-| **ui-ux-pro-max** | "design system", "UI review" | 50+ styles, 161 palettes, 57 font pairings, UX guidelines |
-| **tailwind-design-system** | "design system", "component library" | Tailwind CSS v4 design systems, tokens, component libraries |
-| **web-design-guidelines** | "review UI", "audit design" | Web Interface Guidelines compliance review |
+End-to-end encrypted messaging between OpenCode agents via the attn relay network. Uses Ethereum keypairs for identity, HTTP for daemon communication.
 
-### Quality & Memory
-
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **qa** | `/qa`, "test thoroughly" | Adversarial QA across 10 dimensions, severity-graded report |
-| **vercel-react-best-practices** | React/Next.js tasks | Performance optimization from Vercel Engineering |
-| **remember** | "/remember", "save this" | Persistent memory management |
-| **journal** | After every action | Chronological activity journal |
-| **find-skills** | "how do I...", "find a skill" | Discover and install new skills |
-
-### Terminal & Workers
-
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **wezterm** | `/wezterm spawn`, worker delegation | Manage WezTerm tabs, panes, and worker sessions |
-
-## Extensions
-
-### attn — Encrypted Agent-to-Agent Messaging
-
-End-to-end encrypted messaging between pi agents via the attn relay network. Uses Ethereum keypairs for identity, WebSocket for real-time communication.
-
-**Features:**
+**6 MCP Tools:**
 - `attn_send` — send encrypted messages to any agent
 - `attn_reply` — reply to the most recent inbound message
 - `attn_history` — fetch conversation history
 - `attn_peers` — list known contacts
-- `attn_local_peers` — list locally connected sessions (worker tabs)
+- `attn_local_peers` — list locally connected sessions
 - `attn_status` — check relay connection
 
-**Setup:** The attn daemon auto-starts with pi. Identity keys are generated on first run and stored at `~/.attn/.env`. The daemon listens on `localhost:9742`.
+**Setup:**
+```bash
+cd mcp && npm install
+```
 
-**Remote Control:** Combine with [pi-remote](https://github.com/TopengDev/pi-remote) (Telegram → attn bridge) for mobile remote control of your pi session.
+The MCP server (`mcp/attn-mcp-server.js`) communicates with the attn daemon on `localhost:9742`. Configured automatically via `.opencode.json`.
+
+**Remote Control:** Combine with [pi-remote](https://github.com/TopengDev/pi-remote) (Telegram → attn bridge) for mobile remote control of your OpenCode session.
 
 ## Templates
 
-### STATE.md — Worker Task Tracking
+### STATE.md — Task Tracking
 
-Workers use this template to track live progress. Main session monitors it.
+Track live task progress.
 
 **Statuses:** `STARTING` → `IN_PROGRESS` → `COMPLETE` | `BLOCKED`
 
@@ -231,24 +202,24 @@ Workers use this template to track live progress. Main session monitors it.
 
 ## Success Criteria
 - [ ] Criterion 1
-- [ ] Criterion 2
 
 ## Child Tasks
-- [ ] `task-slug-1` — description
-- [ ] `task-slug-2` — description
+| Task | Slug | Status |
+|------|------|--------|
 
 ## Decisions Log
 | Date | Decision | Rationale |
 |------|----------|-----------|
 ```
 
-## AGENTS.md — The Rule System
+## CLAUDE.md — The Rule System
 
-The heart of this setup. `AGENTS.md` defines how the agent behaves. Key sections:
+The heart of this setup. `CLAUDE.md` defines how the agent behaves. Key sections:
 
 ### Global Rules
+- **Cognitive Workflow** — ANALYZE → PLAN → EXECUTE → VERIFY pipeline
 - **Bug Fixing** — root cause analysis, no surface-level patches
-- **Research** — ultra-thorough, multi-source, cite everything
+- **Research** — ultra-thorough, multi-source (min 3, at least 1 source code), cite everything
 - **Read Before Writing** — understand full architecture before editing
 - **Verify Your Work** — run it, trace it, test edges
 - **Don't Hallucinate APIs** — verify every function/flag before use
@@ -259,58 +230,52 @@ The heart of this setup. `AGENTS.md` defines how the agent behaves. Key sections
 
 ### Task Hierarchy
 - **Triage** — mandatory L1/L2/L3 classification before any task
-- **3-Tier Task Hierarchy** — Initiative → Task → Steps, mandatory for delegation
-- **Main Session = Discussion Only** — workers execute, main coordinates
+- **3-Tier Tracking** — Initiative → Task → Steps
 
 ### Deployment & VPS
 - **NEVER code directly on VPS** — local → git → push → pull/deploy
-- VPS is a deployment target, not a development environment
 
 ### Website Defaults
 - **i18n + Multi-theme** mandatory for Aenoxa ecosystem websites
-- **One-Shot Webapp** non-negotiables for pitch demos (light mode only, fast ship)
+- **One-Shot Webapp** non-negotiables for pitch demos
 
 ### Remote Control
-- Telegram bridge forwards messages via attn
+- Telegram bridge forwards messages via attn MCP
 - Authorized addresses get full agent control
-- Replies always route back to the originating channel
 
 ### Working Style
 - Christopher thinks abstract, fast-paced, nonlinear
 - Be direct, concise, don't over-explain known topics
-- Proactive memory saving
-
-### Customizing
-
-Edit `~/.pi/agent/AGENTS.md` to adjust rules for your setup. Key sections to personalize:
-- **Infrastructure Access** — your VPS, Cloudflare, API keys
-- **Project Locations** — where your codebases live
-- **Who I'm Working With** — your name, working style
-- **What We're Building** — your products and services
-- **Secrets** — path to your secrets file
 
 ## Windows-Specific Notes
 
 ### Path Handling
 - Use forward slashes: `/c/Users/You/project`
 - Git Bash auto-translates to Windows paths
-- Node.js requires Windows-style paths for `require()` and `fs` operations — use `cygpath -w` to convert
-
-### Process Management
-- **NEVER** `taskkill //F //IM node.exe` — kills ALL node processes including pi
-- Kill specific PIDs: `netstat -ano | findstr :9742` then `taskkill //PID <pid> //F`
-- Worker tabs auto-close on exit (WezTerm `exit_behavior = 'Close'`)
 
 ### Shell Differences
 - `~/.bashrc` may not exist by default — create it if needed
 - `chmod` has no effect on NTFS — ignore `chmod` instructions
-- `sshpass` not included — use Node.js `ssh2` package for password-based SSH
 
 ## Remote Control
 
-Optionally control pi from Telegram on your phone. Two paths:
+Optionally control OpenCode from Telegram on your phone.
 
-### Standalone (No VPS)
+### Docker on VPS (Recommended)
+
+For a hosted, always-on bridge:
+
+```bash
+git clone https://github.com/TopengDev/pi-remote.git
+cd pi-remote
+cp .env.example .env
+# Edit .env with your Telegram credentials
+docker compose up -d
+```
+
+Messages flow through: Telegram → pi-remote (VPS) → attn relay → attn MCP → OpenCode.
+
+### Standalone
 
 Run the bot directly on your machine:
 
@@ -324,33 +289,32 @@ node telegram-bot.js
 
 See [remote-control/README.md](remote-control/README.md) for detailed setup.
 
-### Docker on VPS
-
-For a hosted, always-on bridge:
-
-```bash
-git clone https://github.com/TopengDev/pi-remote.git
-cd pi-remote
-cp .env.example .env
-# Edit .env with your Telegram credentials
-docker compose up -d
-```
-
-See [pi-remote](https://github.com/TopengDev/pi-remote) for full documentation.
-
 ## Project Conventions
 
 ### Commits
 - Conventional commits: `type(scope): description`
 - Types: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`, `style`, `perf`, `ci`, `build`
 - Subject ≤72 characters, no Co-Authored-By
+- Use `/commit` command
 
 ### Codebases
-- Live in `~/.pi/agent/repositories/<project-name>/`
-- Each has its own `.pi/AGENTS.md` for project-specific rules
+- Live in `~/.opencode/repositories/<project-name>/`
+- Each has its own `CLAUDE.md` for project-specific rules
 - All use git from day one
+
+## Differences from pi-setup (master branch)
+
+| Aspect | pi-setup (master) | opencode-setup (this branch) |
+|--------|-------------------|------------------------------|
+| Config file | `AGENTS.md` | `CLAUDE.md` + `.opencode.json` |
+| Messaging | pi extension (TypeScript, WebSocket) | MCP server (stdio, HTTP) |
+| Skills | 20+ skill directories | 6 custom commands |
+| Worker spawning | WezTerm multiplexing | Terminal-native |
+| Task tracking | `~/.pi/agent/tasks/` | `~/.opencode/tasks/` |
+| Secrets location | `~/.pi/agent/secrets.env` | `~/.opencode/secrets.env` |
+| Config path | `~/.pi/agent/` | `~/.opencode/` |
 
 ## Notes
 - English is the working language. Indonesian names/terms appear naturally where they exist in projects
-- The agent may reference `.claude/` paths from older setups — replace with `~/.pi/agent/` equivalents
-- Worker sessions auto-register on attn via `ATTN_SESSION` env var
+- The `skills/` directory contains full skill documentation — commands are simpler entry points
+- The `opencode` branch removes pi-specific files (WezTerm skill, attn extension) and replaces with MCP

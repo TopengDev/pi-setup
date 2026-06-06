@@ -1,0 +1,10 @@
+{
+  "name": "attn-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server wrapping the attn daemon API for OpenCode",
+  "main": "attn-mcp-server.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
