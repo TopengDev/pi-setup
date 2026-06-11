@@ -2,10 +2,10 @@
 
 ## Recommended Models
 
-1. **Recraft V4 Vector** (primary) — native SVG, consistent sets via Brand Kit, stroke uniformity
-2. **Gemini** (fallback) — decent concepts but raster-only
+1. **Recraft V4 Vector** (primary — native SVG) — IF `$RECRAFT_API_KEY` is set, call via the `bash` tool + curl (see "Via curl" below). Recraft gives native SVG, consistent sets, stroke uniformity.
+2. **Gemini / GPT Image** (fallback) — decent concepts but raster-only.
 
-**Critical:** Icons need to be vectors (SVG) for production use. If Recraft is unavailable, warn the user that raster icons will need manual vectorization.
+**Critical:** Icons need to be vectors (SVG) for production use. pi has no native image-gen MCP — Recraft is reached over its plain HTTP API via `bash`+curl, gated on `$RECRAFT_API_KEY`. **If no SVG-capable image API is wired into pi, warn the user that raster icons will need manual vectorization** (see SKILL.md image-gen flag).
 
 ## Dimensions
 
@@ -40,10 +40,10 @@ When generating icon SETS (multiple related icons), consistency is critical:
 
 ### Recraft Brand Kit for Sets
 
-If generating a set, use Recraft's Brand Kit / style features:
-- Set the color palette once, apply to all generations
-- Use `create_style` to establish the icon style, then reference it
-- Generate all icons in the same session for maximum consistency
+If generating a set via the Recraft HTTP API, use its Brand Kit / style features:
+- Set the color palette once (pass the same `colors` array on every call)
+- Recraft's `create_style` endpoint establishes a reusable icon style id — create it once, then pass `style_id` on each generation for consistency
+- Keep all prompts structurally identical across the set for maximum consistency
 
 ### Batch Prompt for Sets
 
@@ -58,17 +58,9 @@ Uniform visual weight across all icons. Simple, geometric, minimal.
 
 ## Recraft-Specific Configuration
 
-### Via MCP
-```
-Tool: generate_image
-Parameters:
-  - model: "recraftv4_vector"
-  - style: "icon"
-  - colors: ["#1A1A2E"]  (single color for monochrome)
-  - size: "1024x1024"
-```
+> Note: chilldawg used a Recraft MCP tool (`generate_image` / `create_style`). pi has no such MCP — use the Recraft HTTP API directly via the `bash` tool + curl below. The equivalent parameters (`model: recraftv4_vector`, `style: icon`, `colors`, `size`) go in the JSON body.
 
-### Via curl
+### Via curl (the `bash` tool — pi's only Recraft path)
 ```bash
 curl -s -X POST "https://external.api.recraft.ai/v1/images/generations" \
   -H "Authorization: Bearer $RECRAFT_API_KEY" \
@@ -84,16 +76,16 @@ curl -s -X POST "https://external.api.recraft.ai/v1/images/generations" \
 
 ## Gemini Fallback Pattern
 
-When Recraft isn't available:
+When no native-SVG generator is available, generate a raster icon via the `bash` tool using the Gemini/Imagen curl call from SKILL.md:
 ```
-set_aspect_ratio → "1:1"
-set_model → "flash" (icons don't need Pro quality)
-gemini_generate_image → "[icon description]. Simple flat icon design,
+aspectRatio → "1:1"
+model       → a fast Imagen/Gemini model is fine (icons don't need top-tier quality)
+prompt      → "[icon description]. Simple flat icon design,
     monochrome, centered on white background, clean vector style,
     uniform stroke weight, minimal detail, suitable for UI."
 ```
 
-Warn user: "This is a raster PNG icon. For production, it should be vectorized manually in Figma/Illustrator or re-generated with Recraft for native SVG."
+Warn user: "This is a raster PNG icon. For production, it should be vectorized manually in Figma/Illustrator, or re-generated with a native-SVG image model if one is wired into pi (see SKILL.md image-gen flag)."
 
 ## Example Prompts
 
