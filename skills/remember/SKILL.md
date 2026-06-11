@@ -1,6 +1,7 @@
 ---
 name: remember
 description: Save, review, or clean up persistent memories. Use when you need to remember something, the user asks to save/forget something, or at end of conversation to review what should be persisted.
+argument-hint: [what to remember, or "review" to scan conversation for unsaved insights]
 ---
 
 # Memory Management Skill
@@ -9,8 +10,8 @@ Systematically save, update, and clean up persistent memories.
 
 ## Memory Directory
 
-- **Index:** `~/.claude/memory/MEMORY.md`
-- **Files:** `~/.claude/memory/<type>_<topic>.md`
+- **Index:** `~/.pi/agent/memory/MEMORY.md`
+- **Files:** `~/.pi/agent/memory/<type>_<topic>.md`
 
 ## Modes
 
@@ -83,3 +84,21 @@ For each found:
 - **Keep MEMORY.md under 200 lines** — truncation happens after that
 - **For feedback type:** include **Why** and **How to apply** lines
 - **For project type:** include **Why** and **How to apply** lines
+
+## Shared Memory (for spawned agents)
+
+When spawning a sub-agent in a separate WezTerm pane/window, it can read and
+write the same memory directory. To include shared context in its brief, append:
+
+```
+Shared memories to be aware of (read these files for context):
+- ~/.pi/agent/memory/user_christopher.md
+- ~/.pi/agent/memory/reference_vps.md
+- ~/.pi/agent/memory/reference_cloudflare.md
+
+If you learn something worth persisting across sessions, write it to:
+~/.pi/agent/memory/
+and update the MEMORY.md index.
+```
+
+Only include memories relevant to the agent's task, not all of them.
