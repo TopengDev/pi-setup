@@ -1,6 +1,7 @@
 ---
 name: preflight
 description: Run local CI/CD checks before pushing to avoid failed workflows. Use when the user wants to push, verify builds, run tests, or check that CI would pass.
+argument-hint: [optional: specific check to run]
 ---
 
 ## Preflight CI/CD Check
@@ -13,11 +14,11 @@ Read all workflow files:
 - `.github/workflows/*.yml` / `.github/workflows/*.yaml`
 - `Dockerfile` and `docker-compose.yml` if present
 
-Parse each workflow to extract the actual jobs and steps — linting, type checking, testing, building.
+Parse each workflow to extract the actual jobs and steps — linting, type checking, testing, building. Understand what commands CI runs.
 
 ### 2. Run checks locally
 
-Execute the equivalent local commands for each CI step found:
+Execute the equivalent local commands for each CI step found. Common checks to look for and run:
 
 **Linting & Formatting**
 - Go: `golangci-lint run ./...` or `go vet ./...`
@@ -36,6 +37,10 @@ Execute the equivalent local commands for each CI step found:
 - Node: `npm run build` or `npx next build`
 - Go: `go build ./...`
 - Docker: `docker compose build` (only if the CI workflow builds Docker images)
+
+If the project uses Docker for CI (e.g., `docker compose run tests`), replicate that approach locally rather than running bare commands.
+
+If an argument is provided, only run the matching check (e.g., `/preflight test` runs only tests).
 
 ### 3. Report results
 
@@ -56,16 +61,26 @@ Ready to push: YES / NO
 
 If ANY check fails:
 1. Show the error output (truncated to key lines)
-2. **Root cause analysis first** — read the relevant source code, understand WHY the error exists, not just what the symptom is
-3. Fix the root cause immediately — edit the code directly
-4. After fixing, re-run ALL checks from the beginning
+2. **Root cause analysis first — MANDATORY.** Before writing any fix:
+   - Read the relevant source code, trace the execution path, and identify the actual root cause
+   - Understand WHY the error exists, not just WHAT the symptom is
+   - Trace the error back to its origin — don't fix where it surfaces, fix where it starts
+   - NEVER apply temporary fixes, workarounds, bandaids, or suppress errors
+   - NEVER use try/catch to swallow errors, disable lint rules, skip tests, or add fallback values that mask the real issue
+   - The fix must address the underlying cause, not the symptom
+3. Fix the root cause immediately — edit the code directly, do not ask for permission
+4. After fixing, re-run ALL checks from the beginning (not just the one that failed)
 5. If checks fail again, fix again and re-run ALL checks again
 6. Keep looping until ALL checks pass
-7. If stuck on same error after 3 attempts, stop and ask for help
+7. After all checks pass, invoke the `commit` skill to commit the fixes
+8. Then report the final results
+
+There is no maximum retry limit — keep fixing until it works. If you are truly stuck on the same error after 3 attempts with different approaches, stop and ask the user for help.
 
 ### 5. Rules
 
 - NEVER push code automatically — only report readiness
-- If ALL checks pass on first run, tell the user it's safe to push
-- If fixes were needed, commit them via `/commit` first, then tell the user it's safe to push
+- If ALL checks pass on first run (no fixes needed), tell the user it's safe to push
+- If fixes were needed, commit them via the `commit` skill first, then tell the user it's safe to push
 - Run checks in the same order CI would run them
+- If no CI workflows are found, tell the user and ask what checks they want to run
