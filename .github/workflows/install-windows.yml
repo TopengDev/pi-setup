@@ -123,19 +123,30 @@ jobs:
       - name: Assert --dry-run writes nothing
         run: |
           set -uo pipefail
-          # Snapshot the agent dirs, run --dry-run into a fresh sub-HOME, confirm empty.
-          DRYHOME="$(mktemp -d)"
-          out="$(HOME="$DRYHOME" bash ./install.sh --ci --dry-run 2>&1)"; rc=$?
+          # Run --dry-run into a guaranteed-empty, uniquely-named HOME under the
+          # workspace (NOT mktemp /tmp — on the Windows runner /tmp can collide with
+          # other step state). Assert the agent dirs were never even created.
+          DRYHOME="$GITHUB_WORKSPACE/.dryrun-home"
+          rm -rf "$DRYHOME"
+          mkdir -p "$DRYHOME"
+          # sanity: the fresh HOME must start empty
+          pre="$(find "$DRYHOME" -type f 2>/dev/null | wc -l | tr -d ' ')"
+          echo "pre-existing files in fresh dry-run HOME: $pre (expect 0)"
+          if [ "$pre" -ne 0 ]; then echo "::error::dry-run HOME not empty before test"; exit 1; fi
+
+          out="$(HOME="$DRYHOME" bash "$GITHUB_WORKSPACE/install.sh" --ci --dry-run 2>&1)"; rc=$?
           echo "$out"
           if [ "$rc" -ne 0 ]; then echo "::error::--dry-run exited $rc"; exit 1; fi
-          # Nothing should have been created under the fresh HOME's agent dirs.
-          created="$(find "$DRYHOME/.pi" "$DRYHOME/.opencode" "$DRYHOME/.agents" -type f 2>/dev/null | wc -l | tr -d ' ')"
+
+          created="$(find "$DRYHOME" -type f 2>/dev/null | wc -l | tr -d ' ')"
           echo "files created under dry-run HOME: $created (expect 0)"
           if [ "$created" -ne 0 ]; then
             echo "::error::--dry-run WROTE files (found $created under $DRYHOME)"
             find "$DRYHOME" -type f
+            rm -rf "$DRYHOME"
             exit 1
           fi
+          rm -rf "$DRYHOME"
           echo "ok: --dry-run wrote nothing"
 
       - name: Run setup-doctor (must show no drift after a real install)
