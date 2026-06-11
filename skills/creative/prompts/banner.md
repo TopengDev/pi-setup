@@ -67,14 +67,16 @@ curl -s -X POST "https://api.openai.com/v1/images/generations" \
 
 ## Gemini Pattern
 
+Generate via the `bash` tool using the Gemini/Imagen curl call from SKILL.md:
+
 ```
-1. set_aspect_ratio → "16:9" (or closest match)
-2. set_model → "pro" (better text rendering)
-3. gemini_generate_image → prompt with quoted text
-4. If text is wrong → gemini_edit_image → "Fix the text to read exactly '[CORRECT TEXT]'"
+1. aspectRatio  → "16:9" (or closest match, in the request `parameters`)
+2. model        → use the text-capable Imagen/Gemini model (better text rendering)
+3. prompt       → prompt with the exact quoted text
+4. If text is wrong → regenerate with the prompt amended to "...text reads exactly '[CORRECT TEXT]'"
 ```
 
-Gemini editing advantage: you can iteratively fix text errors through conversation without regenerating from scratch.
+pi generates via stateless curl (no multi-turn edit), so fix text errors by regenerating with a corrected, more explicit prompt.
 
 ## Example Prompts
 
