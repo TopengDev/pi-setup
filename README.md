@@ -49,6 +49,7 @@ rm -rf ~/pi-setup-tmp
 |------|---------|
 | **Docker Desktop** | Container builds on Windows |
 | **Telegram Bot** | Remote control via [pi-remote](https://github.com/TopengDev/pi-remote) |
+| **gitleaks** | Pre-push secret scan (`winget install gitleaks`) — see [Secret-Scan Hook](#secret-scan-hook-opt-in) |
 
 ## Environment
 
@@ -96,6 +97,29 @@ $EDITOR ~/.pi/agent/secrets.env
 | `GEMINI_API_KEY` | Image generation (creative skill) |
 | `VPS_HOST` / `VPS_USER` / `VPS_PASSWORD` | Remote VPS access |
 | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ZONE_ID` | DNS management |
+
+## Secret-Scan Hook (opt-in)
+
+This repo ships a `pre-push` hook at `config/git/hooks/` that runs [gitleaks](https://github.com/gitleaks/gitleaks) over the commits being pushed and **blocks the push** if a secret is detected. It uses a bundled `gitleaks.toml` that adds Anthropic `sk-ant-` key rules on top of gitleaks' defaults (the stock 8.21.x ruleset lacks them).
+
+It is **opt-in** — nothing activates it automatically. To enable it for this repo:
+
+```bash
+# from the repo root
+git config core.hooksPath config/git/hooks
+```
+
+Or enable it globally for every repo on the machine (point at wherever this config is installed):
+
+```bash
+git config --global core.hooksPath ~/.pi/agent/config/git/hooks
+```
+
+**Requirements & behavior:**
+- Needs `gitleaks` on `PATH`. On Windows: `winget install gitleaks` (or `scoop install gitleaks` / `choco install gitleaks`). Git Bash inherits the Windows `PATH`, so the `.exe` is found automatically.
+- **Fails open** — if `gitleaks` is not installed, the hook prints a warning and allows the push (a missing tool never bricks every push). Install gitleaks to get protection.
+- Scans only the **new** commits per ref (fast — it does not re-scan all of history on every push).
+- **Bypass** a false positive for one push with `git push --no-verify`, or add a `gitleaks:allow` comment / a `.gitleaksignore` entry.
 
 ## Directory Layout
 
@@ -155,7 +179,6 @@ After installation, your pi configuration lives at:
 | **creative** | `/creative`, "generate image" | AI image generation with multi-model routing, design theory |
 | **ui-ux-pro-max** | "design system", "UI review" | 50+ styles, 161 palettes, 57 font pairings, UX guidelines |
 | **tailwind-design-system** | "design system", "component library" | Tailwind CSS v4 design systems, tokens, component libraries |
-| **web-design-guidelines** | "review UI", "audit design" | Web Interface Guidelines compliance review |
 
 ### Quality & Memory
 
@@ -172,6 +195,23 @@ After installation, your pi configuration lives at:
 | Skill | Trigger | What it does |
 |-------|---------|--------------|
 | **wezterm** | `/wezterm spawn`, worker delegation | Manage WezTerm tabs, panes, and worker sessions |
+
+## Scripts
+
+Maintenance + safety tooling under `scripts/` (bash + python3, Windows/Git-Bash friendly):
+
+| Script | What it does |
+|--------|--------------|
+| **`skill-eval.sh`** | Structural validator for the skill library — asserts every `SKILL.md` has valid frontmatter, companion refs resolve, and any `evals/evals.json` is schema-valid. Read-only, CI-able. `--json` for machine output, `--strict` to fail on warnings. Exit 0 = green. See [`SKILL-EVALS.md`](scripts/SKILL-EVALS.md) for the eval schema. |
+| **`scan-brief.sh`** | No-creds-in-brief warn-scanner — scans a worker brief for literal secret values and warns (pattern-class + line, never the value), fail-open. Strips `$VAR` / `secrets.env` so credential-by-reference never trips it. `--strict` to block. Backs the [No Credentials In A Brief](AGENTS.md) rule. |
+
+```bash
+# validate the whole skill library (run from repo root)
+bash scripts/skill-eval.sh
+
+# pre-flight a brief before handing it to a worker
+bash scripts/scan-brief.sh notes/my-task/brief.md
+```
 
 ## Extensions
 
