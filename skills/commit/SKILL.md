@@ -1,6 +1,7 @@
 ---
 name: commit
 description: Commit latest changes with a clean, conventional commit message. Use when the user asks to commit, save changes, or says /commit.
+argument-hint: [optional commit message override]
 ---
 
 ## Commit Workflow
@@ -39,8 +40,10 @@ Stage files individually by name — never use `git add -A` or `git add .`
 - Focus on the **why**, not the **what**
 - Add a body (separated by blank line) only if the change is non-trivial
 - NEVER include any Co-Authored-By lines
-- NEVER attribute Claude or any AI in the commit message
+- NEVER attribute pi, the agent, or any AI in the commit message
 - NEVER add signatures, tags, or footers of any kind
+
+If the user provided an argument (a message override), use that as the commit message instead of generating one — still follow the formatting rules above.
 
 ### 4. Commit
 
