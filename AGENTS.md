@@ -420,6 +420,17 @@ A plan built on assumptions wastes more time than the prototype would have taken
 4. **Context** — does the worker need to read specific files, memory entries, prior findings? Include paths or inline the critical context.
 5. **Test accounts** — if verification requires a logged-in session, provide test credentials upfront. Don't let the worker hit auth walls mid-verification.
 
+### No Credentials In A Brief (HARD RULE)
+
+**OVERRIDE: NEVER put a literal secret VALUE in a worker brief, task note, or any handoff text.** Credentials go by **reference**, never by value:
+
+- ✅ Reference by var name: `$VPS_PASSWORD`, `${ANTHROPIC_API_KEY}`, "see `~/.pi/agent/secrets.env`".
+- ❌ Pasting the actual key/password/token string into the brief.
+
+Why: briefs get written to disk (`notes/<task>/brief.md`), echoed into logs, and pasted into worker tabs — every one of those is a leak surface. A var-reference is just as actionable for the worker (it sources `secrets.env`) but carries no secret.
+
+A standalone warn-scanner backs this up: `scripts/scan-brief.sh <file>` scans a brief for the gitleaks secret-prefix set and, on a hit, prints a LOUD warning naming the **pattern-class + line number** (never the value) — then **proceeds anyway** (fail-open warn, not a block). It strips `$VAR` / `${VAR}` / `secrets.env` first, so the CORRECT credential-by-reference pattern never trips it. (Wiring it into the spawn path is a later wave; today it's a manual pre-flight: `scripts/scan-brief.sh notes/<task>/brief.md`.)
+
 An under-equipped worker wastes its context window on workarounds instead of the actual task. Equip first, brief second.
 
 ## Close the Loop — Workers Must Self-Verify and Report Back
