@@ -8,34 +8,34 @@ Complete OpenCode agent configuration. Rules, commands, MCP servers, and templat
 # 1. Install OpenCode
 npm install -g @earendil-works/opencode
 
-# 2. Clone this config
-git clone https://github.com/TopengDev/pi-setup.git ~/opencode-setup-tmp
-cd ~/opencode-setup-tmp
+# 2. Clone this config + check out the opencode branch
+git clone https://github.com/TopengDev/pi-setup.git ~/opencode-setup
+cd ~/opencode-setup
 git checkout opencode
 
-# 3. Install MCP dependencies
-cd mcp && npm install && cd ..
+# 3. (Optional) preview what the installer will copy — writes nothing
+./install.sh --dry-run
 
-# 4. Set up OpenCode config
-mkdir -p ~/.opencode
-cp .opencode.json ~/.opencode/opencode.json
-cp CLAUDE.md ~/.opencode/CLAUDE.md
+# 4. Install (COPY model — copies rules, commands, MCP server, templates, and
+#    seeds secrets.env into ~/.opencode + ~/.agents; runs `npm install` for the MCP)
+./install.sh
 
-# 5. Set up commands
-mkdir -p ~/.opencode/commands
-cp commands/*.md ~/.opencode/commands/
+# 5. Set up secrets + provider keys
+$EDITOR ~/.opencode/secrets.env    # fill in your API keys
+$EDITOR ~/.opencode/opencode.json  # fill provider keys
 
-# 6. Set up templates
-mkdir -p ~/.opencode/notes/templates
-cp notes/templates/* ~/.opencode/notes/templates/
-
-# 7. Set up secrets
-cp .env.example ~/.opencode/secrets.env
-# Edit ~/.opencode/secrets.env with your API keys
-
-# 8. Clean up
-rm -rf ~/opencode-setup-tmp
+# 6. Verify the install matches the repo
+bash scripts/setup-doctor.sh       # expect VERDICT: PASS
 ```
+
+`install.sh` is **idempotent** (re-run anytime — identical files are skipped),
+**branch-aware** (auto-detects the `opencode` profile on this branch; override with
+`--profile opencode`), **non-destructive** (a differing file is backed up to
+`<file>.pre-install` before replacement; an existing `secrets.env` is **never**
+overwritten), and **Windows/Git-Bash safe** (a plain copy — no symlinks). It installs
+`.opencode.json`, `CLAUDE.md` + `AGENTS.md`, `commands/`, `mcp/` (with `npm install`),
+`skills/`, and `notes/templates/` into `~/.opencode/` + `~/.agents/`. See
+[`docs/ONBOARDING.md`](docs/ONBOARDING.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Prerequisites
 
