@@ -109,14 +109,16 @@ Use "quality": "high" for final mockups — photorealism benefits from maximum q
 
 ## Gemini Fallback Pattern
 
+Generate via the `bash` tool using the Gemini/Imagen curl call from SKILL.md:
+
 ```
-set_aspect_ratio → match the target ratio
-set_model → "pro" (always use Pro for photorealism)
-gemini_generate_image → photographic prompt
-gemini_edit_image → refine lighting, color, composition
+1. aspectRatio  → match the target ratio (in the request `parameters`)
+2. model        → use the photoreal-capable Imagen/Gemini model
+3. prompt       → photographic prompt
+4. refine       → adjust the prompt (lighting, color, composition) and regenerate
 ```
 
-Gemini's advantage: iterative editing. Generate a base mockup, then refine via conversation.
+Gemini's advantage is strong photorealistic composition. pi generates via stateless curl, so there is no in-place edit — refine by re-running with a corrected prompt rather than an edit call.
 
 ## Example Prompts
 

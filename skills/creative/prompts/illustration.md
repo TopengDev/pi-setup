@@ -51,9 +51,9 @@ Instead of generic "illustration style," use specific references:
 
 ## Gemini-Specific Tips
 
-- Use Pro model (`set_model` to pro) for illustration quality
+- Request the highest-quality Imagen/Gemini image model for illustration quality (see SKILL.md → "Model-Specific Generation via `bash` Tool")
 - Gemini handles style descriptions well — be specific about artistic medium
-- For series consistency, use the chat tool and reference previous outputs
+- For series consistency, keep prompt structure + style anchors identical across calls (pi generates via stateless curl, so there is no multi-turn chat memory — pin consistency in the prompt itself)
 - "In the style of [medium], not [other medium]" helps constrain output
 
 ## FLUX-Specific Tips
