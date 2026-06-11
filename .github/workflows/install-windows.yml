@@ -1,0 +1,150 @@
+name: install-windows
+
+# The validation we CANNOT do on Linux: run install.sh on a REAL Windows box under
+# Git Bash (windows-latest ships Git for Windows; `shell: bash` => its bash.exe),
+# into the runner's HOME, and assert the copy actually landed where the agent
+# expects it. Then prove idempotency (2nd run exits 0) and that --dry-run writes
+# nothing. Branch-aware: asserts the pi layout on master, the opencode layout on
+# the opencode branch.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: install-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash   # Git Bash (bash.exe from Git for Windows) — the real target shell
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show environment
+        run: |
+          set -euo pipefail
+          echo "HOME=$HOME"
+          echo "bash: $(bash --version | head -1)"
+          echo "branch ref: $GITHUB_REF_NAME"
+
+      - name: Run install.sh (first run, non-interactive)
+        run: |
+          set -euxo pipefail
+          bash ./install.sh --ci
+
+      - name: Assert files landed at the expected agent paths
+        run: |
+          set -uo pipefail
+          fail=0
+          # Pick the profile the same way install.sh does (branch -> profile).
+          case "$GITHUB_REF_NAME" in
+            opencode) PROFILE=opencode ;;
+            *)        PROFILE=pi ;;
+          esac
+          echo "asserting profile: $PROFILE"
+
+          assert_file() {  # <abs-path> <label>
+            if [ -f "$1" ]; then echo "ok file: $2 ($1)"; else echo "FAIL missing file: $2 ($1)"; fail=1; fi
+          }
+          assert_match() { # <repo-rel-src> <abs-dst>  — exists AND byte-identical to repo
+            if [ ! -f "$2" ]; then echo "FAIL missing: $2 (expected copy of $1)"; fail=1; return; fi
+            if cmp -s "$1" "$2"; then echo "ok match: $2 == $1"; else echo "FAIL stale: $2 != repo $1"; fail=1; fi
+          }
+
+          if [ "$PROFILE" = "pi" ]; then
+            PI="$HOME/.pi/agent"; AG="$HOME/.agents"
+            # a representative skill must exist in BOTH skill dirs
+            assert_file "$PI/skills/commit/SKILL.md"  "pi skills/commit"
+            assert_file "$AG/skills/commit/SKILL.md"  "agents skills/commit"
+            assert_match "skills/commit/SKILL.md"     "$PI/skills/commit/SKILL.md"
+            # extensions, notes template, rules
+            assert_file "$PI/extensions/attn/index.ts"           "pi extensions/attn"
+            assert_file "$PI/notes/templates/STATE.md"           "pi notes template"
+            assert_match "AGENTS.md"                             "$PI/AGENTS.md"
+            # secrets seeded from .env.example (absent before install -> created)
+            assert_file "$PI/secrets.env"                        "pi secrets.env (seeded)"
+          else
+            OC="$HOME/.opencode"; AG="$HOME/.agents"
+            assert_file "$OC/skills/commit/SKILL.md"  "opencode skills/commit"
+            assert_file "$AG/skills/commit/SKILL.md"  "agents skills/commit"
+            assert_match "skills/commit/SKILL.md"     "$OC/skills/commit/SKILL.md"
+            assert_file "$OC/notes/templates/STATE.md"           "opencode notes template"
+            assert_match "CLAUDE.md"                             "$OC/CLAUDE.md"
+            assert_match "AGENTS.md"                             "$OC/AGENTS.md"
+            assert_match ".opencode.json"                        "$OC/opencode.json"
+            assert_file "$OC/commands/commit.md"                 "opencode commands/commit"
+            assert_file "$OC/mcp/attn-mcp-server.js"             "opencode mcp server"
+            assert_file "$OC/secrets.env"                        "opencode secrets.env (seeded)"
+          fi
+          [ "$fail" -eq 0 ] || { echo "::error::install file-placement assertions failed"; exit 1; }
+          echo "ok: all expected files present"
+
+      - name: Assert secrets.env is NOT clobbered on re-run
+        run: |
+          set -uo pipefail
+          case "$GITHUB_REF_NAME" in
+            opencode) SECRETS="$HOME/.opencode/secrets.env" ;;
+            *)        SECRETS="$HOME/.pi/agent/secrets.env" ;;
+          esac
+          # Write a sentinel into secrets.env, re-run install, confirm it survived.
+          echo "SENTINEL_DO_NOT_CLOBBER=1" >> "$SECRETS"
+          before="$(cat "$SECRETS")"
+          bash ./install.sh --ci >/dev/null 2>&1
+          after="$(cat "$SECRETS")"
+          if [ "$before" != "$after" ]; then
+            echo "::error::install.sh CLOBBERED an existing secrets.env"
+            exit 1
+          fi
+          grep -q 'SENTINEL_DO_NOT_CLOBBER=1' "$SECRETS" || { echo "::error::sentinel lost from secrets.env"; exit 1; }
+          echo "ok: existing secrets.env preserved across re-run"
+
+      - name: Assert idempotency (2nd run exits 0, no backups, no copies)
+        run: |
+          set -uo pipefail
+          out="$(bash ./install.sh --ci 2>&1)"; rc=$?
+          echo "$out"
+          if [ "$rc" -ne 0 ]; then echo "::error::2nd install run exited $rc (expected 0)"; exit 1; fi
+          copied="$(printf '%s\n' "$out" | grep -c '^\[install\] copied ' || true)"
+          backed="$(printf '%s\n' "$out" | grep -c 'backed up ' || true)"
+          echo "copied lines on 3rd run: $copied (expect 0)"
+          echo "backed-up lines on 3rd run: $backed (expect 0)"
+          if [ "$copied" -ne 0 ] || [ "$backed" -ne 0 ]; then
+            echo "::error::install.sh is NOT idempotent (copied=$copied backed=$backed)"
+            exit 1
+          fi
+          echo "ok: install.sh is idempotent"
+
+      - name: Assert --dry-run writes nothing
+        run: |
+          set -uo pipefail
+          # Snapshot the agent dirs, run --dry-run into a fresh sub-HOME, confirm empty.
+          DRYHOME="$(mktemp -d)"
+          out="$(HOME="$DRYHOME" bash ./install.sh --ci --dry-run 2>&1)"; rc=$?
+          echo "$out"
+          if [ "$rc" -ne 0 ]; then echo "::error::--dry-run exited $rc"; exit 1; fi
+          # Nothing should have been created under the fresh HOME's agent dirs.
+          created="$(find "$DRYHOME/.pi" "$DRYHOME/.opencode" "$DRYHOME/.agents" -type f 2>/dev/null | wc -l | tr -d ' ')"
+          echo "files created under dry-run HOME: $created (expect 0)"
+          if [ "$created" -ne 0 ]; then
+            echo "::error::--dry-run WROTE files (found $created under $DRYHOME)"
+            find "$DRYHOME" -type f
+            exit 1
+          fi
+          echo "ok: --dry-run wrote nothing"
+
+      - name: Run setup-doctor (must show no drift after a real install)
+        run: |
+          set -uo pipefail
+          report="$(bash scripts/setup-doctor.sh --no-color 2>&1)"; rc=$?
+          echo "$report"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::setup-doctor reports drift right after install.sh (install/doctor disagree)"
+            exit 1
+          fi
+          echo "ok: setup-doctor PASS — live matches repo"
