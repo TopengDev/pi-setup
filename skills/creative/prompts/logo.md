@@ -6,8 +6,8 @@
 
 ## Recommended Models
 
-1. **Recraft V4 Vector** (primary) — ONLY model with native SVG output. Use `recraftv4_vector` model.
-2. **Gemini** (fallback if Recraft unavailable) — decent concepts but raster-only, warn user.
+1. **Recraft V4 Vector** (primary — ONLY model with native SVG output, `recraftv4_vector`) — reached via the Recraft HTTP API over the `bash` tool + curl, gated on `$RECRAFT_API_KEY`. pi has no Recraft MCP.
+2. **Gemini / GPT Image** (fallback if no Recraft key) — decent concepts but raster-only, warn user.
 
 **DO NOT USE** for logos:
 - FLUX (photorealism focus, no vector, text unreliable)
@@ -36,17 +36,9 @@ Avoid: clip art, complex illustration, photorealistic elements, busy patterns.
 
 ## Recraft-Specific Configuration
 
-### Via MCP
-```
-Tool: generate_image
-Parameters:
-  - model: "recraftv4_vector" (for SVG output)
-  - style: "vector_illustration" or "icon"
-  - colors: ["#hex1", "#hex2"] (brand colors)
-  - size: "1024x1024"
-```
+> Note: chilldawg used a Recraft MCP tool (`generate_image`). pi has no such MCP — call the Recraft HTTP API directly via the `bash` tool + curl below. The equivalent parameters (`model: recraftv4_vector`, `style`, `colors`, `size`) go in the JSON body.
 
-### Via curl
+### Via curl (the `bash` tool — pi's only Recraft path)
 ```bash
 curl -s -X POST "https://external.api.recraft.ai/v1/images/generations" \
   -H "Authorization: Bearer $RECRAFT_API_KEY" \
