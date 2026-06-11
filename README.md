@@ -9,29 +9,30 @@ Complete pi coding agent rig. Skills, rules, extensions, and templates that turn
 npm install -g @earendil-works/pi-coding-agent
 
 # 2. Clone this config
-mkdir -p ~/.pi/agent ~/.agents
-git clone https://github.com/TopengDev/pi-setup.git ~/pi-setup-tmp
+git clone https://github.com/TopengDev/pi-setup.git ~/pi-setup
+cd ~/pi-setup
 
-# 3. Install skills
-cp -r ~/pi-setup-tmp/skills/* ~/.pi/agent/skills/
-cp -r ~/pi-setup-tmp/skills/* ~/.agents/skills/ 2>/dev/null || true
+# 3. (Optional) preview what the installer will copy — writes nothing
+./install.sh --dry-run
 
-# 4. Install extensions
-cp -r ~/pi-setup-tmp/extensions/* ~/.pi/agent/extensions/
+# 4. Install (COPY model — copies skills, extensions, templates, AGENTS.md, and
+#    seeds secrets.env into ~/.pi/agent + ~/.agents)
+./install.sh
 
-# 5. Install templates
-cp -r ~/pi-setup-tmp/notes/* ~/.pi/agent/notes/
+# 5. Set up secrets
+$EDITOR ~/.pi/agent/secrets.env   # fill in your API keys
 
-# 6. Install config
-cp ~/pi-setup-tmp/AGENTS.md ~/.pi/agent/AGENTS.md
-
-# 7. Set up secrets
-cp .env.example ~/.pi/agent/secrets.env
-# Edit ~/.pi/agent/secrets.env with your API keys
-
-# 8. Clean up
-rm -rf ~/pi-setup-tmp
+# 6. Verify the install matches the repo
+bash scripts/setup-doctor.sh      # expect VERDICT: PASS
 ```
+
+`install.sh` is **idempotent** (re-run anytime — identical files are skipped),
+**branch-aware** (auto-detects the `pi` profile on `master` and the `opencode` profile
+on the `opencode` branch; override with `--profile pi|opencode`), **non-destructive**
+(an existing file that differs is backed up to `<file>.pre-install` before replacement;
+an existing `secrets.env` is **never** overwritten), and **Windows/Git-Bash safe** (a
+plain copy — no symlinks). See [`docs/ONBOARDING.md`](docs/ONBOARDING.md) for the full
+walkthrough and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layout.
 
 ## Prerequisites
 
@@ -202,11 +203,15 @@ Maintenance + safety tooling under `scripts/` (bash + python3, Windows/Git-Bash 
 
 | Script | What it does |
 |--------|--------------|
+| **`setup-doctor.sh`** | Read-only drift auditor — verifies the live agent directories (`~/.pi/agent` / `~/.opencode` + `~/.agents`) match what this repo ships. Profile-aware (auto-detects pi/opencode), `PASS`/`DRIFT` per area, no writes, no systemd checks. Exit 0 = clean, 1 = drift. The companion verifier to `install.sh`. |
 | **`skill-eval.sh`** | Structural validator for the skill library — asserts every `SKILL.md` has valid frontmatter, companion refs resolve, and any `evals/evals.json` is schema-valid. Read-only, CI-able. `--json` for machine output, `--strict` to fail on warnings. Exit 0 = green. See [`SKILL-EVALS.md`](scripts/SKILL-EVALS.md) for the eval schema. |
 | **`scan-brief.sh`** | No-creds-in-brief warn-scanner — scans a worker brief for literal secret values and warns (pattern-class + line, never the value), fail-open. Strips `$VAR` / `secrets.env` so credential-by-reference never trips it. `--strict` to block. Backs the [No Credentials In A Brief](AGENTS.md) rule. |
 
 ```bash
-# validate the whole skill library (run from repo root)
+# verify the live install matches the repo (run from repo root)
+bash scripts/setup-doctor.sh
+
+# validate the whole skill library
 bash scripts/skill-eval.sh
 
 # pre-flight a brief before handing it to a worker
