@@ -1,0 +1,65 @@
+name: structural
+
+# Fast structural gate (Linux). Runs on every push/PR to BOTH branches.
+# Asserts the repo is internally sound BEFORE the slower Windows install smoke:
+#   • every skill is structurally valid (skill-eval.sh)
+#   • every shell script parses (bash -n)
+#   • every JSON file is valid JSON
+# No install here — this is the cheap, fast guard. The real install validation
+# is in install-windows.yml on a windows-latest runner.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: structural-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structural:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate all skills (skill-eval.sh)
+        run: |
+          set -uo pipefail
+          # Structural validation of every skill: SKILL.md + frontmatter + companion
+          # refs resolve + evals.json schema-valid. Pure bash + python3, no install.
+          report="$(bash scripts/skill-eval.sh --skills-dir skills --no-color 2>&1)"; rc=$?
+          echo "$report"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::skill-eval found structural break(s) in the skill library"
+            exit 1
+          fi
+          echo "ok: all skills structurally valid"
+
+      - name: bash -n every shell script
+        run: |
+          set -uo pipefail
+          fail=0
+          # Every tracked *.sh + the pre-push hook (no .sh extension) must parse.
+          while IFS= read -r -d '' s; do
+            if ! bash -n "$s"; then echo "FAIL bash -n: $s"; fail=1; fi
+          done < <(find . -path ./node_modules -prune -o -type f -name '*.sh' -print0)
+          for extra in config/git/hooks/pre-push; do
+            [ -f "$extra" ] || continue
+            if ! bash -n "$extra"; then echo "FAIL bash -n: $extra"; fail=1; fi
+          done
+          [ "$fail" -eq 0 ] || { echo "::error::bash syntax check failed"; exit 1; }
+          echo "ok: all shell scripts parse"
+
+      - name: Validate every JSON file
+        run: |
+          set -uo pipefail
+          fail=0
+          while IFS= read -r -d '' j; do
+            if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$j" 2>/dev/null; then
+              echo "FAIL invalid JSON: $j"; fail=1
+            fi
+          done < <(find . \( -path ./node_modules -o -path '*/node_modules/*' \) -prune -o -type f -name '*.json' -print0)
+          [ "$fail" -eq 0 ] || { echo "::error::JSON validation failed"; exit 1; }
+          echo "ok: all JSON files valid"
