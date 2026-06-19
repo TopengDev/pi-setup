@@ -424,9 +424,14 @@ rs_build_attn_unix() {
   log "remote-stack: $copied binaries installed to $bin_dir"
 
   # Generate identity (idempotent — attnd -init skips keygen if key exists).
+  # Non-fatal: on sandboxed CI environments this may fail; the daemon generates
+  # the key on first real startup.
   log "remote-stack: running attnd -init ..."
-  ATTN_HOME="${ATTN_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/attn}" \
-    "$bin_dir/attnd" -init || warn "remote-stack: attnd -init failed (daemon may not start yet)"
+  local attn_home="${ATTN_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/attn}"
+  mkdir -p "$attn_home"
+  ATTN_HOME="$attn_home" "$bin_dir/attnd" -init \
+    && log "remote-stack: attn identity ready in $attn_home" \
+    || warn "remote-stack: attnd -init failed (key will be generated on first daemon start)"
 }
 
 # rs_build_attn_windows <clone-dir> <bin-dir>
