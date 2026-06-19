@@ -1,0 +1,41 @@
+# AGENTS.personal.md — Personal overlay for the pi-setup AGENTS.md template.
+# Copy this file to `AGENTS.personal.md` and fill in YOUR values.
+# `AGENTS.personal.md` is gitignored — NEVER commit your real values (it holds
+# remote-control auth identifiers). This .example ships with placeholders only.
+
+# ── Operator ──────────────────────────────────────────────────────────────
+{{USER_NAME}} = Your Full Name
+{{USER_HANDLE}} = yourhandle
+
+# ── Filesystem layout (pi defaults) ────────────────────────────────────────
+{{REPOS_DIR}}        = ~/.pi/agent/repositories
+{{NOTES_DIR}}        = ~/.pi/agent/notes
+{{AGENT_CONFIG_DIR}} = ~/.pi/agent
+{{MEMORY_DIR}}       = ~/.pi/agent/memory
+{{SKILLS_DIR}}       = ~/.pi/agent/skills
+{{SCRIPTS_DIR}}      = ~/.pi/agent/scripts
+{{SECRETS_FILE}}     = ~/.pi/agent/secrets.env
+
+# ── Repo / harness identity ────────────────────────────────────────────────
+{{DOTFILES_REPO}}     = your-dotfiles-repo
+{{AGENT_NAME}}        = pi (@earendil-works/pi-coding-agent)
+{{AGENT_SPAWN_SKILL}} = /wezterm
+
+# ── Organisation / product ─────────────────────────────────────────────────
+{{ORG_NAME}}      = YourOrg
+{{ORG_DOMAIN}}    = yourorg.com
+{{PRODUCT_NAME}}  = YourProduct
+{{TIMEZONE}}      = Your/Timezone
+{{TARGET_MARKET}} = YourMarket
+
+# ── Remote control (Telegram → VPS bridge → attn → pi) ─────────────────────
+{{REMOTE_CONTROL_CHANNEL}} = Telegram
+{{REMOTE_BOT_NAME}}        = @YourBot
+{{REMOTE_VPS_BRIDGE_ADDR}} = 0x0000000000000000000000000000000000000000   # attn address of your VPS bridge daemon
+{{REMOTE_SELF_ADDR}}       = 0x0000000000000000000000000000000000000000   # attn address of this machine's pi session
+{{REMOTE_SUPERUSER_ID}}    = 000000000   # your numeric Telegram user ID (enforced server-side by the bot)
+
+# ── Machine-specific (fill per device) ─────────────────────────────────────
+# OS:    e.g. Windows 11 Pro
+# Shell: e.g. Git Bash (bash.exe)
+# Safe process kill: targeted PID kill only — never blanket-kill the runtime process

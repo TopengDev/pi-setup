@@ -2,6 +2,7 @@
 .env
 secrets.env
 *.secret
+AGENTS.personal.md
 
 # Node
 node_modules/
