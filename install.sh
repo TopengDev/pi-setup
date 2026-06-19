@@ -22,12 +22,15 @@
 #   ./install.sh --force              # overwrite even identical files (still backs up)
 #   ./install.sh --ci                 # non-interactive (also via PI_SETUP_CI=1);
 #                                     #   proceeds without secrets.env, skips npm install
+#   ./install.sh --remote-stack       # also clone + build attn-agnostic + pi-remote
+#                                     #   (opt-in: sets up the full Telegram remote control)
 #   ./install.sh --help               # this header
 #
 # Windows / Git Bash notes:
 #   • Pure copy — no symlinks, no reliance on chmod taking effect on NTFS.
 #   • $HOME resolves to /c/Users/<you> under Git Bash; all paths are quoted.
 #   • npm install (opencode mcp/) runs only if `npm` is on PATH and not --ci/--dry-run.
+#   • --remote-stack invokes PowerShell to build the Go attn daemon on Windows.
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -37,15 +40,17 @@ DRY_RUN=0
 FORCE=0
 CI=0
 PROFILE=""
+REMOTE_STACK=0
 
 # CI can also be requested via env so a GitHub Action can set it without flags.
 [ "${PI_SETUP_CI:-0}" = "1" ] && CI=1
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --dry-run) DRY_RUN=1 ;;
-    --force)   FORCE=1 ;;
-    --ci)      CI=1 ;;
+    --dry-run)      DRY_RUN=1 ;;
+    --force)        FORCE=1 ;;
+    --ci)           CI=1 ;;
+    --remote-stack) REMOTE_STACK=1 ;;
     --profile)
       shift
       PROFILE="${1:-}"
@@ -249,6 +254,303 @@ elif [ "$PROFILE" = "opencode" ]; then
   log "=== secrets ==="
   install_secrets "$OC_HOME/secrets.env"
 fi
+
+# ── remote stack (opt-in) ─────────────────────────────────────────────────────
+# Sets up the full Telegram remote-control stack:
+#   attn-agnostic — the Go attn daemon + CLI + pi adapter extension
+#   pi-remote     — the Telegram ↔ attn bridge bot
+#
+# Only runs when --remote-stack is passed.  All steps are idempotent.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Detect OS once (used by all rs_* helpers).
+_rs_detect_os() {
+  case "$(uname -s 2>/dev/null)" in
+    Linux*)              echo "linux" ;;
+    Darwin*)             echo "darwin" ;;
+    MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+    *)                   echo "unknown" ;;
+  esac
+}
+
+# rs_clone_repo <url> <dst-dir> <name>
+rs_clone_repo() {
+  local url="$1" dir="$2" name="$3"
+  if [ -d "$dir/.git" ]; then
+    log "remote-stack: $name already cloned at $dir"
+    return 0
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then log "would clone $name $url -> $dir"; return 0; fi
+  log "remote-stack: cloning $name ..."
+  ensure_dir "$(dirname "$dir")"
+  git clone --depth=1 "$url" "$dir" || { err "failed to clone $name from $url"; return 1; }
+  log "remote-stack: cloned $name -> $dir"
+}
+
+# rs_go_version — latest stable from go.dev/dl; falls back to hardcoded minimum.
+rs_go_version() {
+  if command -v python3 >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
+    local v
+    v=$(curl -fsSL 'https://go.dev/dl/?mode=json' 2>/dev/null | \
+        python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['version'])" 2>/dev/null || true)
+    [ -n "$v" ] && { echo "$v"; return; }
+  fi
+  echo "go1.25.11"   # minimum that satisfies go.mod (go 1.25.0)
+}
+
+# rs_ensure_go <os> — install Go user-space if not on PATH.
+rs_ensure_go() {
+  local os="$1"
+  if command -v go >/dev/null 2>&1; then
+    log "remote-stack: Go already on PATH: $(go version)"; return 0
+  fi
+  # Check our user-space install location.
+  if [ -x "$HOME/sdk/go/bin/go" ]; then
+    export PATH="$HOME/sdk/go/bin:$PATH"
+    log "remote-stack: Go found at ~/sdk/go: $(go version)"; return 0
+  fi
+  case "$os" in
+    linux|darwin)
+      if [ "$DRY_RUN" -eq 1 ]; then log "would install Go to ~/sdk/go"; return 0; fi
+      local goos arch ver tarball url
+      case "$os" in linux) goos="linux" ;; darwin) goos="darwin" ;; esac
+      case "$(uname -m)" in
+        x86_64|amd64)   arch="amd64" ;;
+        aarch64|arm64)  arch="arm64" ;;
+        *) warn "remote-stack: unsupported arch for Go auto-install: $(uname -m)"; return 1 ;;
+      esac
+      ver=$(rs_go_version)
+      tarball="${ver}.${goos}-${arch}.tar.gz"
+      url="https://go.dev/dl/${tarball}"
+      log "remote-stack: installing $ver to ~/sdk/go from $url ..."
+      mkdir -p "$HOME/sdk"
+      local tmp
+      tmp=$(mktemp)
+      curl -fsSL "$url" -o "$tmp" || { err "failed to download Go: $url"; rm -f "$tmp"; return 1; }
+      tar -C "$HOME/sdk" -xzf "$tmp" && rm -f "$tmp"
+      export PATH="$HOME/sdk/go/bin:$PATH"
+      log "remote-stack: Go installed: $(go version)"
+      log "  Add to ~/.bashrc:  export PATH=\"\$HOME/sdk/go/bin:\$PATH\""
+      ;;
+    windows)
+      # Try winget (Windows 11 / modern Windows 10).
+      if command -v winget >/dev/null 2>&1; then
+        log "remote-stack: installing Go via winget ..."
+        winget install GoLang.Go.1.25 --silent --accept-package-agreements --accept-source-agreements 2>/dev/null || true
+        export PATH="/c/Program Files/Go/bin:$PATH"
+      fi
+      if ! command -v go >/dev/null 2>&1; then
+        warn "remote-stack: Go not found after winget attempt."
+        warn "  Install Go manually: https://go.dev/dl  (winget: winget install GoLang.Go.1.25)"
+        warn "  Then re-run: ./install.sh --remote-stack"
+        return 1
+      fi
+      log "remote-stack: Go available: $(go version)"
+      ;;
+    *)
+      warn "remote-stack: Go not found. Install from https://go.dev/dl and re-run --remote-stack."
+      return 1 ;;
+  esac
+}
+
+# rs_build_attn <clone-dir> <os>
+rs_build_attn() {
+  local attn_dir="$1" os="$2"
+  local bin_dir="$HOME/.local/bin"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would build + install attn-agnostic binaries to $bin_dir"
+    return 0
+  fi
+
+  # Idempotent: skip if binaries already present (Linux: attnd, Windows: attnd.exe).
+  if ([ -x "$bin_dir/attnd" ] || [ -x "$bin_dir/attnd.exe" ]) && \
+     ([ -x "$bin_dir/attn"  ] || [ -x "$bin_dir/attn.exe"  ]); then
+    log "remote-stack: attn-agnostic binaries already at $bin_dir — skipping build"
+    log "  (to rebuild: delete $bin_dir/attnd[.exe] and re-run --remote-stack)"
+    return 0
+  fi
+
+  log "remote-stack: building attn-agnostic ..."
+  mkdir -p "$bin_dir"
+
+  case "$os" in
+    linux|darwin)
+      ATTN_REPO_DIR="$attn_dir" ATTN_BIN_DIR="$bin_dir" ATTN_SKIP_SERVICE=1 \
+        sh "$attn_dir/scripts/install.sh" || { err "remote-stack: attn-agnostic build failed"; return 1; }
+      ;;
+    windows)
+      rs_build_attn_windows "$attn_dir" "$bin_dir"
+      ;;
+    *)
+      warn "remote-stack: cannot auto-build on $os. Build attn-agnostic manually:"
+      warn "  cd $attn_dir && ATTN_BIN_DIR=$bin_dir ATTN_SKIP_SERVICE=1 sh scripts/install.sh"
+      return 1 ;;
+  esac
+}
+
+# rs_build_attn_windows <clone-dir> <bin-dir>
+rs_build_attn_windows() {
+  local attn_dir="$1" bin_dir="$2"
+
+  # Prefer pwsh.exe (PowerShell 7+) over powershell.exe (Windows PowerShell 5.1).
+  local ps_cmd=""
+  command -v pwsh.exe     >/dev/null 2>&1 && ps_cmd="pwsh.exe"
+  command -v powershell.exe >/dev/null 2>&1 && [ -z "$ps_cmd" ] && ps_cmd="powershell.exe"
+
+  if [ -z "$ps_cmd" ]; then
+    warn "remote-stack: PowerShell not found. Build manually:"
+    warn "  Open PowerShell, cd to attn-agnostic, run: \$env:ATTN_SKIP_SERVICE='1'; .\\scripts\\install.ps1"
+    return 1
+  fi
+
+  # Convert POSIX paths to Windows for PowerShell.
+  local attn_win bin_win
+  attn_win="$(cygpath -w "$attn_dir" 2>/dev/null || echo "$attn_dir")"
+  bin_win="$(cygpath -w "$bin_dir"   2>/dev/null || echo "$bin_dir")"
+
+  log "remote-stack: building via PowerShell ($ps_cmd) ..."
+  "$ps_cmd" -ExecutionPolicy Bypass -Command "
+    \$env:ATTN_REPO_DIR='${attn_win}';
+    \$env:ATTN_BIN_DIR='${bin_win}';
+    \$env:ATTN_SKIP_SERVICE='1';
+    & '${attn_win}\\scripts\\install.ps1'
+  " || { err "remote-stack: PowerShell build failed"; return 1; }
+}
+
+# rs_wire_pi_adapter <attn-clone-dir> <pi-home>
+#   Replace the old bundled attn extension with the attn-agnostic pi adapter.
+rs_wire_pi_adapter() {
+  local attn_dir="$1" pi_home="$2"
+  local adapter_src="$attn_dir/adapters/pi"
+  local ext_dst="$pi_home/extensions/attn"
+
+  if [ ! -d "$adapter_src" ]; then
+    warn "remote-stack: pi adapter not found at $adapter_src — skipping"
+    return 0
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would replace $ext_dst with attn-agnostic pi adapter from $adapter_src"
+    return 0
+  fi
+
+  # Idempotent marker: adapter has src/index.ts; old extension did not.
+  if [ -f "$ext_dst/src/index.ts" ]; then
+    log "remote-stack: attn-agnostic pi adapter already wired at $ext_dst"
+  else
+    # Back up the old extension if present.
+    if [ -d "$ext_dst" ]; then
+      local backup="${ext_dst}.pre-install"
+      if [ ! -d "$backup" ]; then
+        mv "$ext_dst" "$backup"
+        log "remote-stack: backed up old extension -> $backup"
+      fi
+    fi
+    ensure_dir "$ext_dst"
+    cp -rf "$adapter_src/." "$ext_dst/"
+    log "remote-stack: installed pi adapter -> $ext_dst"
+  fi
+
+  # Install runtime deps (idempotent: npm install is safe to re-run).
+  if [ -f "$ext_dst/package.json" ] && command -v npm >/dev/null 2>&1; then
+    log "remote-stack: npm install in $ext_dst ..."
+    ( cd "$ext_dst" && npm install --omit=dev ) || \
+      warn "remote-stack: npm install failed in adapter dir — run manually: cd $ext_dst && npm install --omit=dev"
+  fi
+}
+
+# rs_setup_pi_remote <clone-dir>
+rs_setup_pi_remote() {
+  local remote_dir="$1"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "would set up pi-remote in $remote_dir"
+    return 0
+  fi
+
+  # Defensive: strip any residual terminal escape sequences from bot.js.
+  local botjs="$remote_dir/bot/bot.js"
+  if [ -f "$botjs" ] && command -v python3 >/dev/null 2>&1; then
+    python3 - "$botjs" <<'PYEOF' 2>/dev/null && log "remote-stack: escape-sequence guard applied to bot.js" || true
+import re, sys
+with open(sys.argv[1], 'rb') as f:
+    c = f.read()
+cleaned = re.sub(rb'\x1b\[[^a-zA-Z]*[a-zA-Z]', b'', c)
+with open(sys.argv[1], 'wb') as f:
+    f.write(cleaned)
+PYEOF
+  fi
+
+  # npm install for the bot.
+  local bot_dir="$remote_dir/bot"
+  if [ -f "$bot_dir/package.json" ] && command -v npm >/dev/null 2>&1; then
+    log "remote-stack: npm install in $bot_dir ..."
+    ( cd "$bot_dir" && npm install ) || \
+      warn "remote-stack: npm install failed — run manually: cd $bot_dir && npm install"
+  fi
+
+  # Seed .env from .env.example if not already present.
+  local env_file="$remote_dir/.env"
+  if [ ! -f "$env_file" ] && [ -f "$remote_dir/.env.example" ]; then
+    cp "$remote_dir/.env.example" "$env_file"
+    log "remote-stack: seeded $env_file (edit with your Telegram token + PI_ADDRESS)"
+  fi
+}
+
+# remote_stack_setup — orchestrates the full remote-stack install.
+remote_stack_setup() {
+  log ""
+  log "=== remote stack (attn-agnostic + pi-remote) ==="
+
+  local rs_os
+  rs_os="$(_rs_detect_os)"
+  log "remote-stack: OS = $rs_os"
+
+  if ! command -v git >/dev/null 2>&1; then
+    err "remote-stack: 'git' not found — install Git and re-run with --remote-stack"
+    return 1
+  fi
+
+  # Determine pi home (used for cloning and extension wiring).
+  local pi_home="$HOME/.pi/agent"
+  ensure_dir "$pi_home"
+
+  # 1. attn-agnostic
+  local attn_dir="$pi_home/attn-agnostic"
+  rs_clone_repo "https://github.com/TopengDev/attn-agnostic.git" "$attn_dir" "attn-agnostic"
+  rs_ensure_go "$rs_os" || { warn "remote-stack: Go unavailable; skipping attn build (re-run after installing Go)"; }
+  if command -v go >/dev/null 2>&1 || [ -x "$HOME/sdk/go/bin/go" ]; then
+    rs_build_attn "$attn_dir" "$rs_os"
+  fi
+  rs_wire_pi_adapter "$attn_dir" "$pi_home"
+
+  # 2. pi-remote
+  local remote_dir="$pi_home/pi-remote"
+  rs_clone_repo "https://github.com/TopengDev/pi-remote.git" "$remote_dir" "pi-remote"
+  rs_setup_pi_remote "$remote_dir"
+
+  log ""
+  log "=== remote stack complete ==="
+  log ""
+  log "Next steps for the remote stack:"
+  log "  1. Fill secrets in ~/.pi/agent/secrets.env:"
+  log "       DEEPSEEK_API_KEY   — from https://platform.deepseek.com"
+  log "       TELEGRAM_BOT_TOKEN — from @BotFather on Telegram"
+  log "       SUPERUSER_TG_ID    — your numeric Telegram ID (@userinfobot)"
+  log "  2. Start the attn daemon:"
+  if [ "$rs_os" = "linux" ] || [ "$rs_os" = "darwin" ]; then
+    log "       systemctl --user start attnd   OR   ~/.local/bin/attnd &"
+  else
+    log "       start the 'attnd' Scheduled Task (or run ~/.local/bin/attnd.exe directly)"
+  fi
+  log "  3. Get your attn address:  attn status"
+  log "  4. Edit $pi_home/pi-remote/.env:"
+  log "       PI_ADDRESS=<your attnd address from step 3>"
+  log "  5. Start the Telegram bridge:"
+  log "       source ~/.pi/agent/secrets.env && node $pi_home/pi-remote/bot/bot.js"
+  log "  6. Chat your pi agent via Telegram!"
+}
+
+[ "$REMOTE_STACK" -eq 1 ] && remote_stack_setup
 
 # ── done ──────────────────────────────────────────────────────────────────────
 echo ""

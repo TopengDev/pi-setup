@@ -1,0 +1,215 @@
+name: install-remote-stack
+
+# Exercises the --remote-stack integration on ubuntu-latest (authoritative Linux
+# test) AND windows-latest (the real target: Windows 11 + Git Bash).
+#
+# Both jobs run install.sh --ci --remote-stack end-to-end in a clean HOME,
+# then assert that all expected components landed:
+#   • attn-agnostic: cloned, built, binaries at ~/.local/bin/
+#   • pi adapter: installed to ~/.pi/agent/extensions/attn/src/index.ts
+#   • pi-remote: cloned, bot/node_modules present
+#
+# Windows note: the attn-agnostic installer shell script (scripts/install.sh)
+# explicitly rejects MINGW/MSYS (Git Bash).  Our install.sh --remote-stack
+# detects Windows and instead invokes PowerShell (pwsh.exe / powershell.exe)
+# to run attn-agnostic/scripts/install.ps1 from within Git Bash.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: install-remote-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Ubuntu (authoritative Linux gate) ─────────────────────────────────────
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run install.sh --ci --remote-stack (clean HOME)
+        run: |
+          set -euxo pipefail
+          CLEAN_HOME="$(mktemp -d)"
+          echo "Using clean HOME: $CLEAN_HOME"
+          # Run the full install+remote-stack into the clean HOME.
+          # Go is pre-installed by setup-go and on PATH; the script won't try to
+          # download it (has go → check_go short-circuits).
+          HOME="$CLEAN_HOME" bash ./install.sh --ci --remote-stack
+          echo "CLEAN_HOME=$CLEAN_HOME" >> "$GITHUB_ENV"
+
+      - name: Assert remote stack components
+        run: |
+          set -uo pipefail
+          fail=0
+          H="$CLEAN_HOME"
+
+          assert_file() {
+            if [ -f "$1" ]; then echo "ok: $1"; else echo "FAIL missing: $1"; fail=1; fi
+          }
+          assert_dir() {
+            if [ -d "$1" ]; then echo "ok: $1/"; else echo "FAIL missing dir: $1"; fail=1; fi
+          }
+
+          echo "--- attn-agnostic clone ---"
+          assert_dir "$H/.pi/agent/attn-agnostic/.git"
+
+          echo "--- attn binaries ---"
+          assert_file "$H/.local/bin/attnd"
+          assert_file "$H/.local/bin/attn"
+          assert_file "$H/.local/bin/attn-mcp"
+          assert_file "$H/.local/bin/attnctl"
+
+          echo "--- attnd executable check ---"
+          if [ -x "$H/.local/bin/attnd" ]; then
+            echo "ok: attnd is executable"
+          else
+            echo "FAIL: attnd is not executable"; fail=1
+          fi
+
+          echo "--- attnd identity ---"
+          assert_file "$H/.config/attn/key.hex"
+
+          echo "--- pi adapter (attn-agnostic) ---"
+          assert_file "$H/.pi/agent/extensions/attn/src/index.ts"
+          assert_dir  "$H/.pi/agent/extensions/attn/node_modules"
+
+          echo "--- pi-remote clone ---"
+          assert_dir "$H/.pi/agent/pi-remote/.git"
+          assert_file "$H/.pi/agent/pi-remote/bot/bot.js"
+          assert_dir  "$H/.pi/agent/pi-remote/bot/node_modules"
+
+          echo "--- pi-remote .env seeded ---"
+          assert_file "$H/.pi/agent/pi-remote/.env"
+
+          echo "--- secrets.env has remote stack vars ---"
+          if grep -q "TELEGRAM_BOT_TOKEN" "$H/.pi/agent/secrets.env"; then
+            echo "ok: TELEGRAM_BOT_TOKEN in secrets.env"
+          else
+            echo "FAIL: TELEGRAM_BOT_TOKEN not in secrets.env"; fail=1
+          fi
+
+          [ "$fail" -eq 0 ] || { echo "::error::remote-stack file-placement assertions failed"; exit 1; }
+          echo "ok: all remote-stack components present"
+
+      - name: Assert idempotency (2nd run no new actions)
+        run: |
+          set -uo pipefail
+          out="$(HOME="$CLEAN_HOME" bash ./install.sh --ci --remote-stack 2>&1)"
+          new_copies="$(printf '%s\n' "$out" | grep -c '^\[install\] copied ' || true)"
+          new_clones="$(printf '%s\n' "$out" | grep -c 'remote-stack: cloned' || true)"
+          new_builds="$(printf '%s\n' "$out" | grep -c 'remote-stack: build' || true)"
+          echo "new copies=$new_copies  clones=$new_clones  builds=$new_builds (expect 0 each)"
+          if [ "$new_copies" -ne 0 ] || [ "$new_clones" -ne 0 ] || [ "$new_builds" -ne 0 ]; then
+            echo "::error::install.sh --remote-stack is NOT idempotent"
+            exit 1
+          fi
+          echo "ok: idempotent"
+
+  # ── Windows (git-bash, the real target) ───────────────────────────────────
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash   # Git Bash — the same shell the end-user runs on Windows
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.25
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Show environment
+        run: |
+          echo "HOME=$HOME"
+          echo "bash: $(bash --version | head -1)"
+          echo "go: $(go version)"
+          echo "node: $(node --version)"
+          echo "uname -s: $(uname -s)"
+
+      - name: Run install.sh --ci --remote-stack (clean HOME)
+        run: |
+          set -euxo pipefail
+          # Use a subdirectory under GITHUB_WORKSPACE as the clean HOME to avoid
+          # cross-drive path issues on the Windows runner (/c/ vs /d/).
+          CLEAN_HOME="$GITHUB_WORKSPACE/.test-home"
+          mkdir -p "$CLEAN_HOME"
+          echo "Using clean HOME: $CLEAN_HOME"
+          # On Windows Git Bash, install.sh --remote-stack detects MINGW and invokes
+          # PowerShell to build attn-agnostic (the shell installer explicitly rejects MINGW).
+          HOME="$CLEAN_HOME" bash ./install.sh --ci --remote-stack
+          echo "CLEAN_HOME=$CLEAN_HOME" >> "$GITHUB_ENV"
+
+      - name: Assert remote stack components
+        run: |
+          set -uo pipefail
+          fail=0
+          H="$CLEAN_HOME"
+
+          assert_file() {
+            if [ -f "$1" ]; then echo "ok: $1"; else echo "FAIL missing: $1"; fail=1; fi
+          }
+          assert_dir() {
+            if [ -d "$1" ]; then echo "ok: $1/"; else echo "FAIL missing dir: $1"; fail=1; fi
+          }
+
+          echo "--- attn-agnostic clone ---"
+          assert_dir "$H/.pi/agent/attn-agnostic/.git"
+
+          echo "--- attn binaries (Windows: .exe) ---"
+          # On Windows, PowerShell install.ps1 builds .exe binaries
+          assert_file "$H/.local/bin/attnd.exe"
+          assert_file "$H/.local/bin/attn.exe"
+          assert_file "$H/.local/bin/attn-mcp.exe"
+          assert_file "$H/.local/bin/attnctl.exe"
+
+          echo "--- pi adapter ---"
+          assert_file "$H/.pi/agent/extensions/attn/src/index.ts"
+          assert_dir  "$H/.pi/agent/extensions/attn/node_modules"
+
+          echo "--- pi-remote ---"
+          assert_dir "$H/.pi/agent/pi-remote/.git"
+          assert_file "$H/.pi/agent/pi-remote/bot/bot.js"
+          assert_dir  "$H/.pi/agent/pi-remote/bot/node_modules"
+
+          echo "--- pi-remote .env seeded ---"
+          assert_file "$H/.pi/agent/pi-remote/.env"
+
+          [ "$fail" -eq 0 ] || { echo "::error::Windows remote-stack assertions failed"; exit 1; }
+          echo "ok: all Windows remote-stack components present"
+
+      - name: Assert idempotency
+        run: |
+          set -uo pipefail
+          out="$(HOME="$CLEAN_HOME" bash ./install.sh --ci --remote-stack 2>&1)"
+          new_clones="$(printf '%s\n' "$out" | grep -c 'remote-stack: cloned' || true)"
+          new_builds="$(printf '%s\n' "$out" | grep -c 'remote-stack: build' || true)"
+          echo "clones=$new_clones  builds=$new_builds (expect 0 each)"
+          if [ "$new_clones" -ne 0 ] || [ "$new_builds" -ne 0 ]; then
+            echo "::error::install.sh --remote-stack not idempotent on Windows"
+            exit 1
+          fi
+          echo "ok: idempotent on Windows"
