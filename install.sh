@@ -376,17 +376,57 @@ rs_build_attn() {
 
   case "$os" in
     linux|darwin)
-      ATTN_REPO_DIR="$attn_dir" ATTN_BIN_DIR="$bin_dir" ATTN_SKIP_SERVICE=1 \
-        sh "$attn_dir/scripts/install.sh" || { err "remote-stack: attn-agnostic build failed"; return 1; }
+      rs_build_attn_unix "$attn_dir" "$os" "$bin_dir"
       ;;
     windows)
       rs_build_attn_windows "$attn_dir" "$bin_dir"
       ;;
     *)
       warn "remote-stack: cannot auto-build on $os. Build attn-agnostic manually:"
-      warn "  cd $attn_dir && ATTN_BIN_DIR=$bin_dir ATTN_SKIP_SERVICE=1 sh scripts/install.sh"
+      warn "  cd $attn_dir && bash scripts/build.sh && cp dist/linux-amd64/* $bin_dir/"
       return 1 ;;
   esac
+}
+
+# rs_build_attn_unix <clone-dir> <os> <bin-dir>
+#   Builds from source via bash (not sh — build.sh uses pipefail which dash rejects).
+#   Copies binaries to bin-dir and runs attnd -init.
+rs_build_attn_unix() {
+  local attn_dir="$1" os="$2" bin_dir="$3"
+  local arch
+  case "$(uname -m)" in
+    x86_64|amd64)  arch="amd64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    *) warn "remote-stack: unsupported arch: $(uname -m)"; return 1 ;;
+  esac
+  local target="${os}-${arch}"
+
+  # Build binaries into attn_dir/dist/<target>/ using bash explicitly.
+  ( cd "$attn_dir" && bash scripts/build.sh "${os}/${arch}" ) || \
+    { err "remote-stack: attn-agnostic build failed (bash scripts/build.sh ${os}/${arch})"; return 1; }
+
+  # Copy all produced binaries to bin_dir.
+  local dist_dir="$attn_dir/dist/${target}"
+  [ -d "$dist_dir" ] || { err "remote-stack: expected dist dir not found: $dist_dir"; return 1; }
+  local copied=0
+  for b in "$dist_dir"/*; do
+    [ -f "$b" ] || continue
+    local bname
+    bname="$(basename "$b")"
+    case "$bname" in
+      *.txt|*.md) continue ;;  # skip SHA256SUMS.txt, README, etc.
+    esac
+    cp "$b" "$bin_dir/$bname"
+    chmod 0755 "$bin_dir/$bname"
+    copied=$((copied + 1))
+  done
+  [ "$copied" -gt 0 ] || { err "remote-stack: no binaries found in $dist_dir"; return 1; }
+  log "remote-stack: $copied binaries installed to $bin_dir"
+
+  # Generate identity (idempotent — attnd -init skips keygen if key exists).
+  log "remote-stack: running attnd -init ..."
+  ATTN_HOME="${ATTN_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/attn}" \
+    "$bin_dir/attnd" -init || warn "remote-stack: attnd -init failed (daemon may not start yet)"
 }
 
 # rs_build_attn_windows <clone-dir> <bin-dir>
