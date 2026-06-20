@@ -54,7 +54,7 @@ If any gate fails → build NOT done. Fix before reporting complete.
 
 ### Why this rule exists (verified failure)
 
-2026-05-24: A Pulse landing redesign was built English-only + single-light-theme. The User rejected the entire output ("just kill the worker, we will not continue it"). Lost ID locale + lost dark mode compounded the rejection beyond just aesthetic — even with iteration, missing these baselines made the work unsalvageable. Indonesian market + premium product = bilingual + dark mode out of the box. Always.
+2026-05-24: A Pulse landing redesign was built English-only + single-light-theme. the user rejected the entire output ("just kill the worker, we will not continue it"). Lost ID locale + lost dark mode compounded the rejection beyond just aesthetic — even with iteration, missing these baselines made the work unsalvageable. Indonesian market + premium product = bilingual + dark mode out of the box. Always.
 
 > **Note:** The `/oneshot-webapp` skill deliberately OVERRIDES this baseline (light-only, single-locale) for pitch/demo builds. That override is intentional and scoped to that skill — it does not relax this rule for Acme-ecosystem product sites.
 

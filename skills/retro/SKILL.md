@@ -19,7 +19,7 @@ Formalizes the weekly-retro ritual. Reads the week's REAL evidence (git, work-qu
 
 1. **ONE bottleneck per week. Not two. Not a list.** Section 3 names exactly one friction point, with a *quantified* cost (hours wasted / threads stalled / decisions missed / context lost). If you're tempted to list three, you haven't found the real one — pick the highest-cost one and cut the rest. A vague bottleneck ("too much context-switching") is a failure; a specific one ("you decision latency on app-trader patches — 2 threads paused 3+ days each") passes.
 
-2. **ONE behavioral change per week. Specific, triggered, measurable.** Section 4 commits to exactly one change. It MUST have a concrete **trigger** ("when a thread is paused >48h"), a concrete **action** ("send a one-line WA nudge with explicit default + 24h timer"), and a **hypothesis** ("paused-thread age drops below 48h median"). Banned: "communicate better", "be more proactive", "improve X" — these are not changes, they're wishes. If the change can't be evaluated next Sunday with a yes/no "did it stick?", rewrite it.
+2. **ONE behavioral change per week. Specific, triggered, measurable.** Section 4 commits to exactly one change. It MUST have a concrete **trigger** ("when a thread is paused >48h"), a concrete **action** ("send a one-line nudge with explicit default + 24h timer"), and a **hypothesis** ("paused-thread age drops below 48h median"). Banned: "communicate better", "be more proactive", "improve X" — these are not changes, they're wishes. If the change can't be evaluated next Sunday with a yes/no "did it stick?", rewrite it.
 
 Both disciplines are scored at the end (see "Self-check gate"). If either fails the gate, fix before sending.
 
@@ -30,7 +30,7 @@ Both disciplines are scored at the end (see "Self-check gate"). If either fails 
 `$ARGUMENTS`:
 - empty → retro for the **current ISO week** (the one being closed today).
 - `week YYYY-W##` → retro for that explicit week (back-fill a missed Sunday).
-- `--dry-run` → run everything except the WhatsApp send + the next-week reminder; print the digest under a banner.
+- `--dry-run` → run everything except the messaging send + the next-week reminder; print the digest under a banner.
 
 Anchor the clock, derive the ISO week, and compute the 7-day window:
 
@@ -63,7 +63,7 @@ done
 - **Notes (Section 1/2 detail):** skim `~/claude/notes/*/report.md` modified this week for major outcomes.
 - **Memory diffs (Section 5):** files added/modified in `{{MEMORY_DIR}}/` this week:
   ```bash
-  find ~/.claude/memory -name '*.md' -mtime -7 -printf '%TY-%Tm-%Td  %p\n' | sort
+  find {{MEMORY_DIR}} -name '*.md' -mtime -7 -printf '%TY-%Tm-%Td  %p\n' | sort
   ```
 
 ## Step 2 — read LAST week's retro (HARD RULE — closes the loop)
@@ -128,7 +128,7 @@ A **5-section digest, <20 lines**, NOT the whole retro. No em/en dashes. Structu
 full: {{NOTES_DIR}}/retros/retro_{YYYY-W##}.md
 ```
 
-- **If dry-run:** print the digest under `=== DRY RUN (retro digest, not sent) ===`; do NOT call WhatsApp and do NOT set the reminder.
+- **If dry-run:** print the digest under `=== DRY RUN (retro digest, not sent) ===`; do NOT send via messaging tool and do NOT set the reminder.
 - **If not dry-run:** `send via your configured messaging tool` to `{{USER_MESSAGING_JID}}`. Verify the return ; retry once on error, then surface failure. (Param names vary — inspect schema at call-time.)
 
 ## Step 6 — arm the next-week evaluation (closes the loop forward)
@@ -149,7 +149,7 @@ CronCreate(cron="58 9 * * 0", recurring=true, durable=true,
 - **Evidence:** git log shows 9 commits across example_pos_web (3) + chilldawg-setup (4) + bms fitest notes (2). work-queue: `fitest-batches-6-7` paused 5 days (awaiting you "Go"); `pulse-billing-tenant-id-bug` paused 8 days (backlog). decisions.log: one `overridden: n` default on `bms-remaining-author`. journal: 14 entries, dominant theme = ISI fitest closeout.
 - **Section 3 bottleneck:** "you decision latency on `fitest-batches-6-7` — paused 5 days awaiting a one-word 'Go', blocking ~6h of queued authoring." (cost quantified: 5 days + 6h).
 - **Section 4 change:** Trigger = "any thread paused >48h awaiting a you yes/no". Action = "morning standup surfaces it with an explicit 1h-default + auto-proceed". Hypothesis = "paused-decision median age drops under 48h; measured from work-queue paused-since dates next retro."
-- **Did last week's change stick?** Last week (W23) committed "send WA nudge for >48h paused threads". Evidence: 2 nudges in journal (`feedback`-tagged), 1 thread resumed within 24h of nudge. Verdict: PARTIAL (nudges fired but one thread still aged out). Carry-over: evolve into the standup-default mechanism above.
+- **Did last week's change stick?** Last week (W23) committed "send a nudge for >48h paused threads". Evidence: 2 nudges in journal (`feedback`-tagged), 1 thread resumed within 24h of nudge. Verdict: PARTIAL (nudges fired but one thread still aged out). Carry-over: evolve into the standup-default mechanism above.
 - **Self-check:** 1 bottleneck ✓ quantified ✓ / 1 change ✓ trigger+action+hypothesis ✓ evaluable ✓ / last week evaluated ✓ / rows cite commits+paused-since ✓ / recurring? decision-latency appeared W23+W24 → flagged structural ✓ / honest? named that main let `pulse-billing` age 8 days without a kill-call ✓. Gate PASS.
 - **Digest** sent to you (7 lines). **Reminder** `weekly-retro` already armed → confirmed, not duplicated.
 
@@ -159,7 +159,7 @@ CronCreate(cron="58 9 * * 0", recurring=true, durable=true,
 - Never write a vague bottleneck or a non-evaluable change — they fail the gate.
 - Never skip the "did last week's change stick?" evaluation (unless first-ever retro).
 - Never clobber an existing finished retro file.
-- Never paste the whole retro into WhatsApp — digest only, <20 lines.
+- Never paste the whole retro into the messaging channel — digest only, <20 lines.
 - Never flatter the week . An all-green retro with no friction named is a red flag, re-examine.
 - Never use em/en dashes or non-label emoji in the digest.
 - Never silently skip a missed week — back-fill or log the slip.

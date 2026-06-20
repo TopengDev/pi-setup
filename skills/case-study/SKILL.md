@@ -23,11 +23,11 @@ Violating any one of these is a failed case study, not a stylistic choice.
 
 3. **RECRUITER-SKIMMABLE STRUCTURE.** A non-technical recruiter must get the gist in ~90 seconds from headers, the one-line summary, the outcome line, and the stack chips alone — WITHOUT reading prose. A technical interviewer must be able to drill into the "Approach & key decisions" section and find real engineering substance. Both audiences, one document: skimmable top layer, deep substrate. Front-load the punch (see §4 template ordering). No wall of text.
 
-4. **USER'S HONEST VOICE — NO YESMAN, NO HYPE.** Confident but not boastful, technical but not jargon-drunk, honest about trade-offs and limits. This is the no-sugarcoat rule applied to self-promotion: claim what's real, own what's unfinished, never inflate. The credibility-builder is the **"What I'd do differently"** section — it signals senior-level self-awareness and is MANDATORY (§4.9). A case study with zero acknowledged trade-offs reads as junior or dishonest.
+4. **HONEST VOICE — NO YESMAN, NO HYPE.** Confident but not boastful, technical but not jargon-drunk, honest about trade-offs and limits. This is the no-sugarcoat rule applied to self-promotion: claim what's real, own what's unfinished, never inflate. The credibility-builder is the **"What I'd do differently"** section — it signals senior-level self-awareness and is MANDATORY (§4.9). A case study with zero acknowledged trade-offs reads as junior or dishonest.
 
 5. **YOU MUST INSPECT THE ARTIFACTS BEFORE WRITING A WORD OF NARRATIVE.** No writing the case study from the project's name, from memory, or from assumptions. Run the §2 gathering pass first. If the repo is inaccessible / empty / can't be analyzed, STOP and ask the user for the artifacts or facts — do not paper over the gap with plausible-sounding invention (that violates rule 1).
 
-> If the user's instruction conflicts with these (e.g. "just say it handles a million users"), do NOT silently comply. Either he's providing a real figure (then it's evidence — cite the basis), or flag it: "I can't verify that number from the repo — want me to mark it as a target/estimate, or leave it out?"
+> If the user's instruction conflicts with these (e.g. "just say it handles a million users"), do NOT silently comply. Either the user is providing a real figure (then it's evidence — cite the basis), or flag it: "I can't verify that number from the repo — want me to mark it as a target/estimate, or leave it out?"
 
 ═══════════════════════════════════════════════════════════════════════════
 ## ✅ GATE — satisfy ALL before delivering the case study
@@ -50,7 +50,7 @@ If any box fails → the case study is NOT done. Fix before reporting complete.
 Read `$ARGUMENTS`. Determine three things:
 
 ### 1a. What's the subject?
-- **A whole repo** ("`/case-study ~/claude/Git/repositories/example_pos_web`") → whole-project case study.
+- **A whole repo** ("`/case-study {{REPOS_DIR}}/example_pos_web`") → whole-project case study.
 - **A feature/subsystem inside a repo** ("the offline-sync in Pulse", "the fitest QA automation") → scoped case study; analyze only that slice but enough surrounding context to frame it.
 - **A body of work that isn't one repo** (e.g. "my BMS fitest QA work" spread across suites) → narrative case study; gather evidence from wherever it lives (notes, suites, commits) and frame the *contribution*, not a single codebase.
 - **Ambiguous / no path** → ask: "Which repo or piece of work? Point me at a path or name it." Don't guess.
@@ -116,7 +116,7 @@ grep -rIl -iE 'webhook|idempoten|migration|race|retr(y|ies)|cache|queue|cron|oau
 # config/env shape (integration surface — what it talks to)
 cat <repo>/.env.example <repo>/.env.sample 2>/dev/null
 ```
-Read the actual implementation of 2–4 of these. The "approach & key decisions" section is only credible if you understood the real code. **Cross-reference memory** — your `~/.claude/memory/` (now a private repo) has deep project context (e.g. `project_example_pos_web.md`, `pulse-sw-navigationpreload-oauth-doublefetch.md`, the fitest entries). Use it for the *why* behind decisions, but PII stays out of the public case study (see §3).
+Read the actual implementation of 2–4 of these. The "approach & key decisions" section is only credible if you understood the real code. **Cross-reference memory** — your `{{MEMORY_DIR}}/` has deep project context (e.g. `project_example_pos_web.md`, `pulse-sw-navigationpreload-oauth-doublefetch.md`, the fitest entries). Use it for the *why* behind decisions, but PII stays out of the public case study (see §3).
 
 ### 2e. What shipped / is it live (outcome evidence, not aspiration)
 ```bash
@@ -128,7 +128,7 @@ grep -rIE 'topengdev|acme|vercel|fly|railway|render' <repo> --include=*.json --i
 - Real users / tenants? **Only if you confirms** — never infer user numbers from code.
 
 ### 2f. Ask you for the non-code facts (the things the repo CANNOT tell you)
-The repo gives you the *what* and *how*. It usually cannot give you: the **business context**, the **real outcome/metrics**, the **constraints he was under**, and **why it mattered**. Ask a tight batch (don't interrogate — 3–6 targeted questions):
+The repo gives you the *what* and *how*. It usually cannot give you: the **business context**, the **real outcome/metrics**, the **constraints the user was under**, and **why it mattered**. Ask a tight batch (don't interrogate — 3–6 targeted questions):
 - "What problem/pain did this solve, and for whom?"
 - "Any real numbers I can use? (users, tenants, latency, time saved, error-rate, revenue, load handled.) If none, that's fine — I'll keep it qualitative."
 - "What were the hard constraints? (deadline, solo build, no budget, legacy system, device/offline, a specific client demand.)"
@@ -136,7 +136,7 @@ The repo gives you the *what* and *how*. It usually cannot give you: the **busin
 - "Solo or team — and which parts were yours?" (keeps attribution honest.)
 - "Anything you're NOT proud of / would redo?" (feeds §4.9 authentically.)
 
-If he's asleep/unavailable (autonomous run), write everything the artifacts DO support, and **explicitly mark the gaps** (`[needs you: real user count]`) rather than inventing — he fills them on review. Never fabricate to avoid a blank.
+If the user is unavailable (autonomous run), write everything the artifacts DO support, and **explicitly mark the gaps** (`[needs you: real user count]`) rather than inventing — the user fills them on review. Never fabricate to avoid a blank.
 
 ---
 
@@ -144,12 +144,12 @@ If he's asleep/unavailable (autonomous run), write everything the artifacts DO s
 
 A public case study is an attack surface and a leak risk. Before writing:
 
-- **No secrets, ever.** No keys, tokens, passwords, internal hostnames, IPs, JIDs, phone numbers, `secrets.env` contents, or `.env` values. Grep your own draft for `sk-`, `password`, `token`, `$VPS_HOST`, `@s.whatsapp.net`, real phone numbers.
+- **No secrets, ever.** No keys, tokens, passwords, internal hostnames, IPs, JIDs, phone numbers, `secrets.env` contents, or `.env` values. Grep your own draft for `sk-`, `password`, `token`, `$VPS_HOST`, `@s.telegram.org`/messaging JIDs, real phone numbers.
 - **No PII** — your memory repo + notes contain real names (PARTNER_A, FRIEND_A, COWORKER_B, RECRUITER_A, client names) and private business context. The public case study must not expose people's names, private client identities, or internal infra without permission. Generalize: "a recruiter", "an enterprise banking client (under NDA)", "my co-founder" — not real names.
 - **NDA / client-confidential work** (e.g. ISI/BRI/BMS fitest, BCAS) — frame the *contribution and skills* abstractly; never expose the client's internal system details, screenshots, or anything that would breach confidentiality. When unsure whether something is shareable, ask you or default to the generalized version.
 - **Strip internal paths** — `/home/user/...`, repo-internal structure that reveals nothing useful and looks unprofessional.
 
-If the case study is `--for application` to a *specific* trusted recipient and you okays naming a client, that's his call — default is generalized.
+If the case study is `--for application` to a *specific* trusted recipient and the user okays naming a client, that's their call — default is generalized.
 
 ---
 
@@ -200,7 +200,7 @@ A 3–5 line paragraph you can paste into an application / DM / cover note, in H
 - **Confident, not boastful.** State what's real and let it stand. No "I'm passionate about", no "world-class", no exclamation-pile.
 - **Specific over impressive-sounding.** A real detail (a number, a name, a constraint) beats any adjective.
 - **Honest about limits.** Trade-offs and "what I'd do differently" are features, not weaknesses.
-- **Note on your stylized voice:** for prose written as you in his *personal* register (a portfolio "about"-style blurb, an outreach cover line — esp. §4.10), he has a specific stylistic preference (no emoji; a restricted punctuation set — line breaks instead of periods/commas/dashes; tech names kept intact). His memory carries the exact rule (`feedback_writing_style`). The case-study BODY is normal technical prose (use normal punctuation — it must read as professional engineering writing); the stylistic constraint applies to the §4.10 cover blurb / first-person personal-voice lines IF he wants it. When in doubt for a cover blurb, ask which voice; default the technical body to standard, clean prose.
+- **Note on your stylized voice:** for prose written in the user's *personal* register (a portfolio "about"-style blurb, an outreach cover line — esp. §4.10), the user has a specific stylistic preference (no emoji; a restricted punctuation set — line breaks instead of periods/commas/dashes; tech names kept intact). The user's memory carries the exact rule (`feedback_writing_style`). The case-study BODY is normal technical prose (use normal punctuation — it must read as professional engineering writing); the stylistic constraint applies to the §4.10 cover blurb / first-person personal-voice lines IF the user wants it. When in doubt for a cover blurb, ask which voice; default the technical body to standard, clean prose.
 
 ---
 
@@ -261,13 +261,13 @@ Replacement discipline: every time you delete a filler word, the fix is a **conc
 | `--for` | Default location | Notes |
 |---|---|---|
 | `github` | `<repo>/CASE_STUDY.md` (or fold into `README.md` if you wants) | Lives with the code; engineers find it on the repo |
-| `portfolio` | `~/claude/Git/repositories/<portfolio-repo>/content/case-studies/<slug>.md` if a portfolio repo exists, else `~/claude/notes/case-studies/<slug>.md` | you ports into his portfolio site; also emit a short paste-blurb |
-| `application` | `~/claude/notes/applications/<company-or-role>-<slug>.md` | The 1-screen version + the §4.10 cover blurb, tailored to that role |
+| `portfolio` | `{{REPOS_DIR}}/<portfolio-repo>/content/case-studies/<slug>.md` if a portfolio repo exists, else `{{NOTES_DIR}}/case-studies/<slug>.md` | user ports into their portfolio site; also emit a short paste-blurb |
+| `application` | `{{NOTES_DIR}}/applications/<company-or-role>-<slug>.md` | The 1-screen version + the §4.10 cover blurb, tailored to that role |
 
 Always:
 - Confirm the repo's actual layout before writing INTO it (don't clobber an existing `README.md` — append or write `CASE_STUDY.md`, and only with your nod).
 - Write the file, then **tell you exactly where it is and what to paste where** ("CASE_STUDY.md in the repo root; the 3-line blurb at the bottom is ready to drop into a LinkedIn DM").
-- If autonomous + the destination is ambiguous, default to `~/claude/notes/case-studies/<slug>.md` and flag it for him to relocate.
+- If autonomous + the destination is ambiguous, default to `{{NOTES_DIR}}/case-studies/<slug>.md` and flag it for the user to relocate.
 
 ---
 
@@ -321,7 +321,7 @@ the industry-standard POS pattern, reached after PWA bridges hit Chrome's LNA wa
 
 ## Outcome
 - Running in production, used daily by [needs you: real number] retailers.
-- [If he gives latency/uptime numbers → here, tagged. Else qualitative + honest.]
+- [If the user gives latency/uptime numbers → here, tagged. Else qualitative + honest.]
 
 ## Tech stack
 Next.js 16 · React 19 · TypeScript · Capacitor · Kotlin · [DB] · Docker · nginx · a VPS
@@ -329,7 +329,7 @@ Next.js 16 · React 19 · TypeScript · Capacitor · Kotlin · [DB] · Docker ·
 ## What I'd do differently
 - The native shell is a second codebase to maintain — I'd evaluate whether a thinner native
   layer (hardware-only bridge) could shrink that surface.
-- [A real entitlement/sync edge he'd revisit, from §2f.] ...
+- [A real entitlement/sync edge worth revisiting, from §2f.] ...
 ```
 
 ### Example B — fitest QA automation (body-of-work, `--for application`, `--role "QA / SDET"`, NDA-aware)
@@ -403,11 +403,11 @@ Note how both: name real constraints, give every decision a real trade-off, tag/
 
 1. **Parse** the invocation → subject + `--for` + `--length` + `--role` (§1). Ask if the subject is ambiguous.
 2. **Gather** — run the §2 artifact pass on the real repo/source. NO narrative yet. Capture sources as you go.
-3. **Ask you** the §2f non-code questions (or mark gaps if he's unavailable — never invent).
+3. **Ask you** the §2f non-code questions (or mark gaps if the user is unavailable — never invent).
 4. **Privacy pass** (§3) — note what must be generalized/redacted.
-5. **Draft** the case study to the §4 template, in his honest voice, every claim traceable.
+5. **Draft** the case study to the §4 template, in the user's honest voice, every claim traceable.
 6. **Audit** — §6 evidence audit (every metric sourced/tagged) + §7 filler grep + §5 skim score (≥12/16; #4/#5/#6 not zero).
 7. **Land** the file in the right place + format (§8); tell you where it is and what to paste where.
-8. **Report** — what you analyzed (which repo/commits), the case study path, and any `[needs you]` gaps he should fill.
+8. **Report** — what you analyzed (which repo/commits), the case study path, and any `[needs you]` gaps for the user to fill.
 
 Remember: this is a proof-of-competence artifact for your livelihood. Its credibility is its entire value — and credibility comes from being *verifiably true and specific*, not impressive-sounding. A sharp interviewer who can't poke a hole in it is the goal. Write the truest, most specific version — and let the real work speak.

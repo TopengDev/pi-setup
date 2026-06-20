@@ -32,8 +32,8 @@ One `triage.json` per task, living in the task notes dir **beside `STATE.md` and
 
 | Layer | File | Behaviour |
 |-------|------|-----------|
-| **Primary** (immediate) | `scripts/spawn-worker.sh` | Calls `check-triage.sh` before creating the tmux window. Refuses (exit 4) if blocked. **Fail-closed** on missing/invalid triage. |
-| **Secondary** (belt-and-suspenders) | `~/.claude/hooks/triage-gate-hook.sh` (PreToolUse, matcher `Bash`) | Catches `spawn-worker.sh` Bash commands even if the wrapper is bypassed. **Fail-open** on any uncertainty — only a confirmed block denies. |
+| **Primary** (immediate) | `scripts/spawn-worker.sh` | Calls `check-triage.sh` before creating the WezTerm pane. Refuses (exit 4) if blocked. **Fail-closed** on missing/invalid triage. |
+| **Secondary** (belt-and-suspenders) | `{{AGENT_CONFIG_DIR}}/hooks/triage-gate-hook.sh` (PreToolUse, matcher `Bash`) | Catches `spawn-worker.sh` Bash commands even if the wrapper is bypassed. **Fail-open** on any uncertainty — only a confirmed block denies. |
 | **Shared logic** | `scripts/check-triage.sh` | Single source of truth. `<window>` [`<task_dir>`] → exit 0 allow / 1 block / 2 internal-error. |
 
 > ⚠️ **Hooks load at session start.** A newly-added/edited hook does NOT affect
@@ -47,7 +47,7 @@ One `triage.json` per task, living in the task notes dir **beside `STATE.md` and
 1. **Explicit** — `<task_dir>` arg (`$2`) or `$TASK_DIR` env → `<task_dir>/triage.json`.
    Pass this when spawning for zero ambiguity:
    `TASK_DIR={{NOTES_DIR}}/foo-2026-05-24 spawn-worker.sh foo`
-   or `spawn-worker.sh foo ~/claude <task_dir>` (3rd positional).
+   or `spawn-worker.sh foo {{WORKSPACE_DIR}} <task_dir>` (3rd positional).
 2. **Convention/glob** (fallback) — `{{NOTES_DIR}}/<window_name>-*/triage.json`,
    newest by mtime. Works because the notes dir is conventionally
    `<window-name>-<YYYY-MM-DD>` and the window name is the task slug.
@@ -69,7 +69,7 @@ L1 trivial work does NOT need the full 3-tier ceremony. For L1:
 - deliver with `brief-worker.sh --quick <window> <brief>` (accepts the stub; the
   default path requires a "Parent initiative" line for full 3-tier linkage)
 
-Pure-comms L1 (send WA, list tmux, answer a question) is **not** a worker task —
+Pure-comms L1 (send Telegram, list WezTerm panes, answer a question) is **not** a worker task —
 it stays in main. Don't spawn a worker for it.
 
 ## Testing the gate

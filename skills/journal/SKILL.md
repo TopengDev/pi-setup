@@ -21,7 +21,7 @@ mid-session; the audit upgrades the keepers automatically.
 > (`journal-audit.py`) on a daily **systemd timer** (~04:00 WIB). pi runs on
 > **Windows** with **no systemd**. Until a scheduler is wired up (Windows Task
 > Scheduler, or a manual `pi`-invoked run), treat the audit as **manual** — run
-> it yourself when you want to consolidate, or ask The User to schedule it. The
+> it yourself when you want to consolidate, or the user can schedule it. The
 > *capture* half (this skill) works fully today; only the *automatic* promotion
 > half is pending a pi scheduling decision. This is a known PW-wave follow-up
 > (memory automation), not a bug in this skill.
@@ -31,7 +31,7 @@ mid-session; the audit upgrades the keepers automatically.
 Append an entry the moment any of these happen — don't wait to be asked:
 
 - **decision** — a choice was made (direction, architecture, strategy, a "we'll do X not Y")
-- **feedback** — The User expressed a preference or correction about how the agent should work
+- **feedback** — the user expressed a preference or correction about how the agent should work
 - **project** — a durable fact about ongoing work: a goal, a constraint, a state change, a HEAD/commit, an env quirk
 - **reference** — a pointer to a person, tool, resource, credential location, repo, endpoint
 - **ephemeral** — transient status / chatter you want logged but the audit should NOT promote (it will skip these)
@@ -70,8 +70,8 @@ echo "journaled [$TS] ($TAG) $SUMMARY"
 # a decision
 #   - [2026-06-12 14:03 WIB] (decision) Switched app-trader to Strategy E (100% TP5 + BE-trail at TP3)
 
-# feedback from The User, with detail
-#   - [2026-06-12 14:05 WIB] (feedback) The User prefers hard-block over warn for git hooks
+# feedback from the user, with detail
+#   - [2026-06-12 14:05 WIB] (feedback) user prefers hard-block over warn for git hooks
 #       Came up while dropping the redundant tsc-check hook.
 
 # a durable project fact
@@ -89,7 +89,7 @@ echo "journaled [$TS] ($TAG) $SUMMARY"
 1. **One fact per entry.** Keep the summary to a single line; put nuance in the detail line.
 2. **Pick the most specific tag.** decision/feedback/project/reference get promoted; ephemeral is skipped.
 3. **Never hand-edit past entries** in journal.md — append only. The audit tracks a high-water timestamp; rewriting history breaks idempotency.
-4. **Don't duplicate `remember`.** If The User explicitly asks to "remember X" as a durable fact right now, the `remember` skill (write the memory file directly) is fine. Use `/journal` for the continuous, low-friction capture that the audit consolidates.
+4. **Don't duplicate `remember`.** If the user explicitly asks to "remember X" as a durable fact right now, the `remember` skill (write the memory file directly) is fine. Use `/journal` for the continuous, low-friction capture that the audit consolidates.
 5. **Never put secrets in an entry** — reference where a credential lives (e.g. "$VAR in secrets.env"), never the value.
 
 ## Verify

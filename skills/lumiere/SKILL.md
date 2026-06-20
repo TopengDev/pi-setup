@@ -9,7 +9,7 @@ allowed-tools: Bash, Read
 
 > Adapted from **elpabl0** (lumiere.attn / github.com/alkautsarf), with permission, 2026-05-30.
 > Provenance note: elpabl0's published `sebat-duls` repo contained **no committed video skill** —
-> "lumiere" is his *agent name*. This is an **original implementation** of the video-perception
+> "lumiere" is the *agent name* for this skill. This is an **original implementation** of the video-perception
 > concept (frame extraction + cost-budgeted vision tiers) built for our stack. Credit to elpabl0
 > for the concept; the code here is ours.
 

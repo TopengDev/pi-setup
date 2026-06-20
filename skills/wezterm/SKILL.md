@@ -199,7 +199,7 @@ Main session MUST complete ALL of these atomically BEFORE spawning:
 4a. **VERIFY ATTN REGISTRATION**: After spawning the worker, run `curl localhost:9742/local-peers` from main and confirm the worker's `ATTN_SESSION` name appears in the response. If the worker name is not listed, the worker didn't load the attn extension — investigate and re-spawn if necessary. A worker without attn cannot push status updates to main.
 5. **REPORT VIA ATTN**: Worker MUST call attn_send to main with completion report on finish. On blocker: attn_send blocker details to main. Main MUST kill worker via Ctrl+D immediately after receiving attn DONE report.
 6. **COMPLETE**: Worker sends `attn_send to: 'main'` with [COMPLETE] report, sets STATE.md to COMPLETE + writes report.md. Main reviews, then kills worker with `/wezterm kill <pane-id>`.
-7. **BLOCKED**: Worker sends `attn_send to: 'main'` with [BLOCKED] details, sets STATE.md to BLOCKED. Main surfaces to The User.
+7. **BLOCKED**: Worker sends `attn_send to: 'main'` with [BLOCKED] details, sets STATE.md to BLOCKED. Main surfaces to the user.
 
 ### Monitoring Protocol (push-based via attn)
 
@@ -209,9 +209,9 @@ Workers push status updates to main via `attn_send to: 'main'`. Main does NOT po
 |-------|---------|---------------|-------------|
 | Milestone reached | Every major sub-goal done | `attn_send to: 'main'` [PROGRESS] message (SHOULD) | Acknowledge, no action needed unless direction looks wrong |
 | Task complete | All work done + verified | `attn_send to: 'main'` [COMPLETE] message (MUST) | Review report.md, kill worker tab |
-| Blocked | Unresolvable blocker hit | `attn_send to: 'main'` [BLOCKED] message (MUST) | Surface blocker to The User, decide next steps |
+| Blocked | Unresolvable blocker hit | `attn_send to: 'main'` [BLOCKED] message (MUST) | Surface blocker to the main session, decide next steps |
 | Silent >20 min | No attn update received | — (worker may be stuck) | `/wezterm peek <pane-id>` or check STATE.md |
-| Worker alive check | Every 15 min (passive) | — | `wezterm cli list \| grep <pane-id>` — if dead, flag to The User |
+| Worker alive check | Every 15 min (passive) | — | `wezterm cli list \| grep <pane-id>` — if dead, flag to main session |
 
 ## Rules
 

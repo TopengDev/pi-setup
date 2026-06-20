@@ -28,7 +28,7 @@ Turns a natural-language request into a stored, scheduled reminder.
 > natural-language parsing, slugging, and list/cancel logic below all work today;
 > only the *autonomous fire-at-time* half is pending a pi decision.
 >
-> ### Two pi-decisions to make this fire unattended (FLAG for The User)
+> ### Two pi-decisions to make this fire unattended (FLAG for the user)
 > 1. **Scheduler:** wire **Windows Task Scheduler** (or `schtasks`) to invoke a
 >    small pi run (or a plain script) at the reminder's due time, which then reads
 >    the store and sends the due rows. This is the pi equivalent of CronCreate +
@@ -152,7 +152,7 @@ For when a real scheduler is wired (cron-style, 5-field `M H DOM MON DOW`):
 
 When Windows Task Scheduler (or equivalent) invokes the fire routine at a due
 time, it should: read `~/.pi/agent/reminders.md` → select `pending` rows whose
-`due` ≤ now (WIB) → for each, send the body to The User via the Telegram Bot API
+`due` ≤ now (WIB) → for each, send the body to the user via the Telegram Bot API
 (`bash` + curl, token + chat id from pi secrets) → mark `once` rows `status=done`
 and recompute the next `due` for `recurring` rows. Reminder body:
 

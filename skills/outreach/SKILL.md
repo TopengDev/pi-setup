@@ -5,6 +5,8 @@ argument-hint: <target — recruiter/company/person + role or context, or a job 
 allowed-tools: Bash, Read, Glob, Grep, Write, Edit, WebSearch, WebFetch, Skill
 ---
 
+> **pi-setup note:** `--channel whatsapp` produces a draft for the user to send manually (no WhatsApp MCP on pi). All other channels work via the standard messaging/email tools available.
+
 # /outreach — research → tailored, proof-led outreach → approval gate → tracked follow-up
 
 Turn "reach out to this recruiter/client" into a **researched, personalized, proof-led message that you approve before anything sends**, plus a follow-up cadence and a tracker so leads don't rot. The difference between a reply and silence is whether the message proves you bothered to understand the target and can point at real shipped work.
@@ -17,20 +19,20 @@ The two failure modes this skill exists to prevent: **(1) generic template-blast
 
 Violating any one is a failed outreach, not a stylistic choice.
 
-1. **DRAFT-FOR-APPROVAL — NEVER AUTO-SEND. EVER.** This skill DRAFTS. It does not send. No `send_message`, no email-send, no Threads post, no form-submit, no DM — until you reads the exact final text and explicitly says go ("send it" / "approved" / "yes send"). Present the draft, the channel, the recipient, and WAIT. This is a hard gate even for warm/known contacts, even for a "quick" follow-up, even when he seems to want speed. Outreach in HIS name to a recruiter/client is reputation-bearing and irreversible — a wrong send can't be unsent. If he says "just send it" without having seen the text, show the text first and confirm once. (The send itself, once approved, runs through the normal channel tool — but the approval is the gate, not optional.)
+1. **DRAFT-FOR-APPROVAL — NEVER AUTO-SEND. EVER.** This skill DRAFTS. It does not send. No `send_message`, no email-send, no Threads post, no form-submit, no DM — until you reads the exact final text and explicitly says go ("send it" / "approved" / "yes send"). Present the draft, the channel, the recipient, and WAIT. This is a hard gate even for warm/known contacts, even for a "quick" follow-up, even when the user seems to want speed. Outreach in their name to a recruiter/client is reputation-bearing and irreversible — a wrong send can't be unsent. If the user says "just send it" without having seen the text, show the text first and confirm once. (The send itself, once approved, runs through the normal channel tool — but the approval is the gate, not optional.)
 
 2. **PERSONALIZATION-MANDATORY — ≥3 SPECIFICS OR DON'T SEND.** Every message must contain **at least 3 concrete, target-specific facts** that prove this was written for THEM, not pasted: the person's/company's real name + what they actually do, a specific detail about the role/product/post, something real about why you fits THIS one, a reference to something they shipped/wrote/announced. A message that would work verbatim for a different company FAILS this gate — rewrite it. Generic "I'm a passionate fullstack dev looking for opportunities" with the company name swapped in is a template-blast and is BANNED (rule enforced by the §5 personalization audit). If you can't find 3 real specifics, you haven't researched enough (§2) — go back, or tell you the target is too thin to personalize.
 
 3. **LEAD WITH A PROOF-POINT, NOT A PITCH.** Open (or near-open) with a concrete, relevant *shipped thing* — a real project, a live URL, a case study (pair with `/case-study`), a specific result — that maps to what the target needs. "I built X (live at Y) which is close to what you're doing with Z" beats any amount of "I'm passionate / I'm a hard worker / I'd love the opportunity". Claims of competence are cheap; a link to working software is proof. The proof-point must be REAL and relevant to THIS target (a POS case study for a retail-tech client; the QA automation story for an SDET role) — not a generic "check my portfolio".
 
-4. **USER'S VOICE — DIRECT, NO CORPORATE EAGERNESS.** Write as you: direct, concise, technically credible, zero corporate-eager mush. BANNED: "I am writing to express my keen interest", "I would be thrilled/honored", "I am passionate about leveraging", "Dear Hiring Manager, I hope this email finds you well", and the rest of §6. He has a specific personal writing style for first-person prose (no emoji; restricted punctuation — line breaks instead of periods/commas/dashes; tech names kept intact — full rule in memory `feedback_writing_style`); APPLY it when the channel + register suit his personal voice (Threads, a casual DM, a personal-brand note), and confirm if unsure. For a formal email to a corporate recruiter, normal clean punctuation is usually right — but still HIS register: short, direct, substance-first, never groveling. Match register to channel; never sound like a cover-letter template.
+4. **THE USER'S VOICE — DIRECT, NO CORPORATE EAGERNESS.** Write in the user's voice: direct, concise, technically credible, zero corporate-eager mush. BANNED: "I am writing to express my keen interest", "I would be thrilled/honored", "I am passionate about leveraging", "Dear Hiring Manager, I hope this email finds you well", and the rest of §6. The user has a specific personal writing style for first-person prose (no emoji; restricted punctuation — line breaks instead of periods/commas/dashes; tech names kept intact — full rule in memory `feedback_writing_style`); APPLY it when the channel + register suit their personal voice (Threads, a casual DM, a personal-brand note), and confirm if unsure. For a formal email to a corporate recruiter, normal clean punctuation is usually right — but still their register: short, direct, substance-first, never groveling. Match register to channel; never sound like a cover-letter template.
 
-5. **ANTI-SPAM DISCIPLINE.** No blasting. No more than the §7 follow-up cadence (and STOP on a no or on silence past the cadence). Verify the channel + recipient identity before drafting a send target (right person, right JID/email/handle — never fuzzy-match a contact; for WhatsApp, the whitelist + `check_number` rule applies). Respect "no". One well-researched message > ten generic ones, and a burned contact is worse than no contact. This skill never enrolls anyone in an automated sequence — every send is individually approved (rule 1).
+5. **ANTI-SPAM DISCIPLINE.** No blasting. No more than the §7 follow-up cadence (and STOP on a no or on silence past the cadence). Verify the channel + recipient identity before drafting a send target (right person, right address/handle — never fuzzy-match). For WhatsApp drafts on pi, verify the number is correct before noting it for the user to send. Respect "no". One well-researched message > ten generic ones, and a burned contact is worse than no contact. This skill never enrolls anyone in an automated sequence — every send is individually approved (rule 1).
 
-> If you asks for something that breaks these (e.g. "blast 50 recruiters the same message", "just auto-send the follow-ups"), do NOT silently comply. Flag it: the value is in per-target personalization + his approval. Offer the right version (research + tailor each, draft for approval).
+> If you asks for something that breaks these (e.g. "blast 50 recruiters the same message", "just auto-send the follow-ups"), do NOT silently comply. Flag it: the value is in per-target personalization + the user's approval. Offer the right version (research + tailor each, draft for approval).
 
 ═══════════════════════════════════════════════════════════════════════════
-## ✅ GATE — satisfy ALL before showing you the draft (and the draft is the ONLY output until he approves)
+## ✅ GATE — satisfy ALL before showing you the draft (and the draft is the ONLY output until the user approves)
 ═══════════════════════════════════════════════════════════════════════════
 
 - [ ] **Target researched** — you ran the §2 research pass; you can name what they do + ≥3 specifics about THEM.
@@ -38,7 +40,7 @@ Violating any one is a failed outreach, not a stylistic choice.
 - [ ] **A real, relevant proof-point leads** (rule 3) — named, and it actually maps to this target's need.
 - [ ] **Right channel + right length** for this persona (§3, §4) — and the recipient identity is verified (rule 5).
 - [ ] **Voice is your** — direct, no corporate eagerness; zero §6 banned phrases (grep the draft).
-- [ ] **The draft is presented for approval; NOTHING has been sent** (rule 1). The send waits on his explicit go.
+- [ ] **The draft is presented for approval; NOTHING has been sent** (rule 1). The send waits on the user's explicit go.
 - [ ] **A tracker row is prepared** (§8) so the lead + cadence are logged once it sends.
 
 If any box fails → do not present as ready / do not send. Fix first.
@@ -87,10 +89,10 @@ WebSearch "<company> <product> / <person> <role> recent"   → recent signal, wh
 - For a **job post**: fetch it, extract the real stack + must-haves + the company's framing. Map your real experience to their list (honestly — see §2c).
 - For a **company/client**: understand the product + the likely pain you could solve. Find a recent signal.
 - For a **person** (recruiter/founder): role, what they're hiring for, any public posts. (For a Threads/X lead, the post itself is the signal — read it.)
-- **Cross-reference your real arsenal** in `~/.claude/memory/` (now a private repo): `project_income_diversification_2026` (positioning: premium bilingual fullstack + native mobile + infra + AI — a rare combo; freelance = anchor), `project_example_pos_web`, the Pulse/fitest/QA project entries, and any existing `/case-study` outputs in `~/claude/notes/case-studies/`. These are the proof-points + the honest skill inventory you draw the fit-hook from.
+- **Cross-reference your real arsenal** in `{{MEMORY_DIR}}/` (private memory repo): `project_income_diversification_2026` (positioning: premium bilingual fullstack + native mobile + infra + AI — a rare combo; freelance = anchor), `project_example_pos_web`, the Pulse/fitest/QA project entries, and any existing `/case-study` outputs in `{{NOTES_DIR}}/case-studies/`. These are the proof-points + the honest skill inventory you draw the fit-hook from.
 
 ### 2c. Honesty in the fit (no-yesman applies to selling too)
-The fit-hook must be **true**. Don't claim a stack he hasn't touched or oversell the match to land the message — a fabricated fit gets exposed in the first call and burns the lead worse than a pass. If the match is partial, lead with the real overlap and be straight about the rest. (This is the no-sugarcoat rule applied to self-promotion: claim what's real, position it well, don't inflate.) If the target is a genuinely bad fit, tell you — don't manufacture enthusiasm for a role he shouldn't chase.
+The fit-hook must be **true**. Don't claim a stack the user hasn't touched or oversell the match to land the message — a fabricated fit gets exposed in the first call and burns the lead worse than a pass. If the match is partial, lead with the real overlap and be straight about the rest. (This is the no-sugarcoat rule applied to self-promotion: claim what's real, position it well, don't inflate.) If the target is a genuinely bad fit, say so — don't manufacture enthusiasm for a role that's a bad fit.
 
 ### 2d. If research comes up thin
 If you can't find ≥3 real specifics (obscure company, no public footprint), tell you: "I can only find [X, Y] about this target — that's thin for a personalized message. Options: (a) you give me more context, (b) I draft a shorter, lower-investment touch and we accept a lower hit-rate, (c) skip it." Don't paper over a thin target with generic filler (that violates rule 2).
@@ -105,11 +107,11 @@ Pick the channel that fits the target + relationship. Each has a length budget �
 |---|---|---|---|
 | **Email** | Formal recruiter, agency, structured client intro, when an address is known | 90–150 words, a real subject line | Most room for a proof-point + fit. Subject must be specific, not "Job application". |
 | **LinkedIn** | Recruiters, hiring managers, professional warm reach | Connection note ≤ 280 chars; InMail/DM 100–130 words | The note is brutal on length — one sharp proof-hook + one ask. |
-| **WhatsApp** | A warm/known contact, an Indo lead, someone who gave a number (e.g. a recruiter like RECRUITER_A) | 2–5 short lines | Casual register. Whitelist + `check_number` BEFORE any send target (rule 5). Often Bahasa for Indo contacts. |
+| **WhatsApp** | A warm/known contact, an Indo lead, someone who gave a number (e.g. a recruiter like RECRUITER_A) | 2–5 short lines | Casual register. Often Bahasa for Indo contacts. *(pi-setup: WhatsApp MCP not available — use Telegram or note the draft for the user to send manually.)* |
 | **Threads / X** | A public-post lead (the @itsmasiam / dualbyte pattern), founder/dev-community warm reach | Reply: tight; DM: 2–4 lines | your stylized voice fits here (no-emoji / restricted-punctuation — `feedback_writing_style`). Lead by engaging the actual post. |
 | **Application form** | A job portal with a "message"/cover field | Match the field; usually 80–150 words | Treat the cover field like a tight email; still personalize + proof-lead. |
 
-Default if `--channel` unset: email for a formal recruiter/agency with a known address; LinkedIn for a hiring manager; the native platform for a public-post lead (Threads/X); WhatsApp only for an explicitly warm Indo contact who shared a number.
+Default if `--channel` unset: email for a formal recruiter/agency with a known address; LinkedIn for a hiring manager; the native platform for a public-post lead (Threads/X); WhatsApp for a warm Indo contact who shared a number *(on pi, produce the draft + instruct the user to send manually via their phone)*.
 
 ### 3a. Picking the proof-point (rule 3)
 Match the proof to the target's need — don't reach for the same one every time:
@@ -143,7 +145,7 @@ write-up: <case-study/portfolio link>.">
 
 <One clear, low-friction ask: a call, a reply, "worth a chat?". One ask, not three.>
 
-<sign-off — his name>
+<sign-off — the user's name>
 ```
 
 ### Frame: LinkedIn connection note (≤ 280 chars)
@@ -168,7 +170,7 @@ Kayaknya nyambung sama <their thing>. Boleh ngobrol bentar?
 ```
 <Engage the actual post first — a real, substantive reaction to what they said, not "great post">
 
-<the relevant proof-point + link, in his style: no emoji, line breaks instead of commas/periods,
+<the relevant proof-point + link, in the user's style: no emoji, line breaks instead of commas/periods,
 tech names intact>
 
 <a light, non-needy opener to talk — not a hard pitch into their replies>
@@ -238,7 +240,7 @@ Rules:
 - **Each follow-up is its own draft-for-approval** (rule 1) — never auto-fire a sequence. The skill drafts the next touch; you approves the send.
 - **Every follow-up must add something** — a new proof-point, a relevant observation, a useful link. A content-free "just bumping this" is spam.
 - **Warm leads** can use a softer/shorter cadence; **a reply** ends the cadence (switch to a real conversation, no more scripted touches).
-- **Scheduling the reminder:** to actually remember a follow-up, pair with `/remindme` (e.g. `/remindme in 4 days follow up with <target>`) so it surfaces as a WhatsApp nudge — a tracker row alone is passive and gets forgotten. Offer to set this when a message sends.
+- **Scheduling the reminder:** to actually remember a follow-up, pair with `/remindme` (e.g. `/remindme in 4 days follow up with <target>`) so it surfaces as a reminder — a tracker row alone is passive and gets forgotten. Offer to set this when a message sends.
 
 `follow-up <target>` flow: read the tracker row (§8) for this target → confirm no reply came → check which touch is next + that the timing is due → draft that touch (adding value) → present for approval → on send, update the tracker + offer the next `/remindme`.
 
@@ -246,7 +248,7 @@ Rules:
 
 ## 8. TRACKER (so leads don't rot)
 
-Maintain a simple, greppable log at **`~/claude/notes/outreach/tracker.md`** (create dir/file if absent). One row per target:
+Maintain a simple, greppable log at **`{{NOTES_DIR}}/outreach/tracker.md`** (create dir/file if absent). One row per target:
 
 ```
 | Date | Target (person @ company) | Type | Channel | Proof used | Status | Last touch | Next action (date) | Link/notes |
@@ -260,7 +262,7 @@ Maintain a simple, greppable log at **`~/claude/notes/outreach/tracker.md`** (cr
 - On **send** (after your approval): flip to `sent`, set last-touch + next-action date, and offer the `/remindme` for the next-action.
 - On **reply**: set `replied`, stop the cadence, note the outcome.
 - `track` intent: read the file, show an at-a-glance table (esp. rows with a due/overdue next-action), surface anything that's slipped.
-- Keep it PII-aware — it's in his private notes, but still don't dump secrets; a name + company + public link is fine.
+- Keep it PII-aware — it's in private notes, but still don't dump secrets; a name + company + public link is fine.
 
 ---
 
@@ -277,8 +279,8 @@ Maintain a simple, greppable log at **`~/claude/notes/outreach/tracker.md`** (cr
 ### Example 2 — `/outreach @itsmasiam --channel threads` (warm, public-post lead)
 1. **Research:** read the actual thread (what masiam posted), their work/context; pull the relevant proof from memory.
 2. **Voice:** Threads → your stylized voice (no emoji, restricted punctuation, tech names intact — `feedback_writing_style`).
-3. **Draft (§4 Threads frame):** engage the post substantively first → surface the relevant proof + link in his style → light, non-needy opener to talk.
-4. **Audit + present for approval.** Send nothing until he okays the exact text. (This is the real dualbyte/@itsmasiam pattern — a public post as the warm-in.)
+3. **Draft (§4 Threads frame):** engage the post substantively first → surface the relevant proof + link in the user's style → light, non-needy opener to talk.
+4. **Audit + present for approval.** Send nothing until the user okays the exact text. (This is the real dualbyte/@itsmasiam pattern — a public post as the warm-in.)
 
 ### Example 3 — `/outreach follow-up <Name> @ <Company>`
 1. Read tracker row → initial sent 4 days ago, no reply, next = follow-up 1.
@@ -286,7 +288,7 @@ Maintain a simple, greppable log at **`~/claude/notes/outreach/tracker.md`** (cr
 3. Present for approval → on send, update tracker to `follow-up-1`, offer `/remindme` for follow-up 2 (+7d).
 
 ### Example 4 — `/outreach track`
-Read `~/claude/notes/outreach/tracker.md` → render the table, highlight overdue next-actions, flag stale `sent` rows with no follow-up scheduled.
+Read `{{NOTES_DIR}}/outreach/tracker.md` → render the table, highlight overdue next-actions, flag stale `sent` rows with no follow-up scheduled.
 
 ---
 
@@ -294,15 +296,15 @@ Read `~/claude/notes/outreach/tracker.md` → render the table, highlight overdu
 
 | Failure mode | Smell | Fix |
 |---|---|---|
-| **Auto-sent without approval** | A message went out you never saw | NEVER. Rule 1 is absolute — draft, present, wait for his go. |
+| **Auto-sent without approval** | A message went out you never saw | NEVER. Rule 1 is absolute — draft, present, wait for the user's go. |
 | **Template-blast** | Same message, name swapped; <3 specifics; passes the swap-test as generic | §5 audit; research more (§2); make the body depend on THIS target. |
 | **Pitch-led, no proof** | Opens with "I'm passionate / hard-working", no shipped thing | Rule 3 — lead with a real, relevant proof-point + link. |
-| **Corporate-eager voice** | "I would be thrilled… I hope this finds you well… valuable asset" | §6 grep; rewrite direct + specific in his register. |
-| **Overclaimed fit** | Claims a stack/experience he doesn't have to land it | §2c honesty; lead with the real overlap; flag bad fits. |
-| **Wrong/unverified recipient** | Drafted at the wrong JID/email/handle; fuzzy-matched a contact | Rule 5 — verify identity (`check_number`/whitelist for WA) before the send target. |
+| **Corporate-eager voice** | "I would be thrilled… I hope this finds you well… valuable asset" | §6 grep; rewrite direct + specific in the user's register. |
+| **Overclaimed fit** | Claims a stack/experience the user doesn't have to land it | §2c honesty; lead with the real overlap; flag bad fits. |
+| **Wrong/unverified recipient** | Drafted at the wrong address/email/handle; fuzzy-matched a contact | Rule 5 — verify identity (look up the correct address/handle) before the send target. |
 | **Spammy follow-up** | "Just bumping this" with nothing new; >3 touches; chasing past a no | §7 cadence — finite, value-adding, STOP on no/silence. |
 | **Lead rot** | Sent and forgotten; no follow-up ever fires | §8 tracker + `/remindme` pairing so it actually resurfaces. |
-| **Leaking secrets/PII** | Internal infra, keys, private names in a public message | Keep his stylized proof public-safe; never expose secrets/private client identities. |
+| **Leaking secrets/PII** | Internal infra, keys, private names in a public message | Keep the user's stylized proof public-safe; never expose secrets/private client identities. |
 
 ---
 
@@ -311,10 +313,10 @@ Read `~/claude/notes/outreach/tracker.md` → render the table, highlight overdu
 1. **Parse** (§1) → intent (new / follow-up / track), target, type, channel, warm-vs-cold. Ask if the target's unclear.
 2. **Research** (§2) → the target-research checklist; gather ≥3 real specifics + the best-fit proof-point. Honest fit (§2c). If thin, flag (§2d).
 3. **Channel + proof** (§3) → pick channel + length budget + the proof-point that maps to this target.
-4. **Draft** (§4) → the right frame, filled from research, in his voice; lead with proof; one ask.
+4. **Draft** (§4) → the right frame, filled from research, in the user's voice; lead with proof; one ask.
 5. **Audit** (§5 personalization + §6 banned-phrase grep) → ≥3 specifics, swap-test passes, zero banned phrases, honest.
 6. **Present for approval (rule 1)** → show the exact final text + channel + recipient. **SEND NOTHING.** Wait for your explicit go.
-7. **On his approval** → send via the channel tool, write the §8 tracker row (`sent`), and offer to `/remindme` the next follow-up.
+7. **On the user's approval** → send via the channel tool, write the §8 tracker row (`sent`), and offer to `/remindme` the next follow-up.
 8. **Follow-up / track** intents → §7 / §8 as above; every follow-up is its own approval gate.
 
-Remember: this is you reaching out in his own name about his livelihood. The message represents him to people who might hire him or pay him — so it must be researched enough to prove he cares, proof-led enough to be credible, in his real voice, and NEVER sent without his say-so. One sharp, personal, approved message beats a hundred templated blasts — and a message he didn't approve should never exist.
+Remember: this is reaching out in the user's own name about their livelihood. The message represents them to people who might hire or pay them — so it must be researched enough to prove they care, proof-led enough to be credible, in their real voice, and NEVER sent without their say-so. One sharp, personal, approved message beats a hundred templated blasts.

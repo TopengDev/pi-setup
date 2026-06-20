@@ -2,7 +2,7 @@
 # oneshot-webapp deploy helper — ship a Next.js (standalone) app to <slug>.topengdev.com
 # Replicates the proven recruitco-ops-pm / ProjectAlpha deploy (2026-05-29). Idempotent: safe to re-run.
 #
-# [VPS-specific] This drives a remote deploy over SSH against The User's VPS + the topengdev.com
+# [VPS-specific] This drives a remote deploy over SSH against the user's VPS + the topengdev.com
 # Cloudflare zone. It runs fine from pi's Git Bash on Windows (ssh/scp/curl/sshpass/tar all work),
 # but the DNS/nginx/cert/SSH details are tied to that specific host. For a different host, treat
 # this as a template and adapt.

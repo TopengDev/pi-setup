@@ -129,7 +129,7 @@ Runs AFTER the push succeeds. This is the "make the release real and observable"
 - If there is NO `CHANGELOG.md` and the project looks like a release artifact (has a version manifest: `package.json` / `Cargo.toml` / `pyproject.toml`), offer to generate one from the git history:
   - `git log --pretty=format:'%s' {LAST_TAG}..HEAD` (or full history if no prior tag), grouped into Added / Changed / Fixed by conventional-commit prefix (`feat:`→Added, `fix:`→Fixed, else Changed).
   - Write a Keep-a-Changelog `## [{VERSION}] - {YYYY-MM-DD}` section. Commit it via the `commit` skill and re-push.
-- If the project is not a release artifact (no manifest), skip silently — most of The User's repos are apps/configs, not published packages.
+- If the project is not a release artifact (no manifest), skip silently — most repos here are apps/configs, not published packages.
 
 **(b) Annotated semver tag**
 
@@ -151,7 +151,7 @@ Runs AFTER the push succeeds. This is the "make the release real and observable"
 
 **(d) Publish to package registries — OPTIONAL / DEFERRED**
 
-> ⚠️ The User does not currently publish CLI packages. Treat this whole sub-step as OFF by default. Only run it if the project clearly publishes a package AND the user explicitly confirms.
+> ⚠️ The user may not publish CLI packages. Treat this whole sub-step as OFF by default. Only run it if the project clearly publishes a package AND the user explicitly confirms.
 
 If this project publishes a CLI / library:
 - **npm:** `npm publish` (verify `package.json` `name`/`version`/`files`/`bin`, `npm whoami`, 2FA OTP if enabled; `--access public` for scoped first publish).
