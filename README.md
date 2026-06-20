@@ -67,6 +67,7 @@ Git Bash sources `/etc/profile` and `/etc/bash.bashrc` on startup. Create `~/.ba
 ```bash
 # ~/.bashrc
 export NODE_PATH="$(npm root -g)"
+export PATH="$HOME/.local/bin:$PATH"   # needed for attn / attnd on Windows
 source ~/.pi/agent/secrets.env 2>/dev/null
 ```
 
@@ -240,7 +241,7 @@ End-to-end encrypted messaging between pi agents via the attn relay network. Use
 - **Bundled** (`extensions/attn/`) — a TypeScript shim that ships in this repo. Works out of the box but uses an older TS-based daemon.
 - **Full stack** (via `--remote-stack`) — the [attn-agnostic](https://github.com/TopengDev/attn-agnostic) Go adapter replaces the bundled extension. The Go daemon (`attnd`) is lighter, faster, and cross-platform. Use this for production.
 
-**Setup:** Running `./install.sh --remote-stack` builds and wires the full stack automatically. The daemon listens on `localhost:9742` and connects to the s0nderlabs relay network.
+**Setup:** Running `./install.sh --remote-stack` builds and wires the full stack automatically. The daemon listens on `localhost:9742` and connects to the s0nderlabs relay network. **No VPS needed** — the relay is hosted infrastructure; you only run the daemon locally.
 
 **Remote Control:** Combine with [pi-remote](https://github.com/TopengDev/pi-remote) (Telegram → attn bridge) for mobile remote control of your pi session. Both are set up by `--remote-stack`.
 
@@ -369,6 +370,8 @@ attn-agnostic   — Go daemon + CLI that handles encrypted agent messaging (the 
 pi-remote       — Telegram bot that bridges Telegram ↔ attn (the UI layer)
 ```
 
+**No VPS needed.** The attn relay is a hosted network run by s0nderlabs — you connect to it but run nothing on a server yourself. The Telegram bot polls Telegram's cloud API from your own machine. Everything runs locally; the only hosted infrastructure is the relay that routes encrypted messages between your devices.
+
 ### 1-command integrated setup (recommended)
 
 ```bash
@@ -394,37 +397,86 @@ Re-runnable: existing clones and binaries are detected and skipped.
 | `DEEPSEEK_API_KEY` | `~/.pi/agent/secrets.env` | [platform.deepseek.com](https://platform.deepseek.com) → API keys |
 | `TELEGRAM_BOT_TOKEN` | `~/.pi/agent/secrets.env` + `~/.pi/agent/pi-remote/.env` | Telegram → @BotFather → `/newbot` |
 | `SUPERUSER_TG_ID` | `~/.pi/agent/secrets.env` + `.env` | Telegram → message @userinfobot |
-| `PI_ADDRESS` | `~/.pi/agent/pi-remote/.env` | Fill after step 2 below |
+| `PI_ADDRESS` | `~/.pi/agent/pi-remote/.env` | Fill after starting the daemon: `attn status` shows it |
 
-### Bring-up sequence
+### Bring-up sequence — Windows (Git Bash)
+
+This is the primary flow for the Windows + Git Bash setup this repo is designed for.
+Prereq: `~/.local/bin` must be in your Git Bash `PATH` (the `~/.bashrc` snippet in
+[Shell Profile](#shell-profile) adds it — open a fresh tab after editing).
+
+```bash
+# 1. Source your credentials
+source ~/.pi/agent/secrets.env
+
+# 2. Start the attn daemon
+#    The installer built ~/.local/bin/attnd.exe but does NOT auto-start it.
+#    Run it in a dedicated Git Bash tab (keep it running):
+~/.local/bin/attnd.exe
+
+#    Or start it in the background in your current tab:
+~/.local/bin/attnd.exe &
+```
+
+```bash
+# 3. Confirm the daemon is up and get your attn address
+attn status
+# → attnd address: 0x<your-address>
+# → relay: connected
+
+# 4. Fill the bot's .env (edit with your values)
+#    The installer seeded ~/.pi/agent/pi-remote/.env from the template — open and fill:
+#      TELEGRAM_BOT_TOKEN=<your bot token from @BotFather>
+#      SUPERUSER_TG_ID=<your numeric Telegram ID from @userinfobot>
+#      PI_ADDRESS=0x<your attnd address from step 3>
+notepad ~/.pi/agent/pi-remote/.env
+#    Or use Git Bash (sed — replace PI_ADDRESS after the file is already filled with token/ID):
+sed -i "s|^PI_ADDRESS=.*|PI_ADDRESS=0x<your-attnd-address>|" ~/.pi/agent/pi-remote/.env
+
+# 5. Start the Telegram bridge (new Git Bash tab)
+source ~/.pi/agent/secrets.env
+node ~/.pi/agent/pi-remote/bot/bot.js
+
+# 6. Start pi (another Git Bash tab or WezTerm pane)
+source ~/.pi/agent/secrets.env
+pi --provider deepseek --model deepseek-v4-pro
+```
+
+Send a message to your Telegram bot — it routes through the local daemon to pi, and pi's reply comes back the same way.
+
+> **Want attnd to start automatically?** Create a Windows Scheduled Task pointing at
+> `%USERPROFILE%\.local\bin\attnd.exe` with trigger "At log on" — no admin required.
+> Or run it from your `~/.bashrc` start logic.
+
+### Bring-up sequence — Linux / macOS
 
 ```bash
 # 1. source secrets
 source ~/.pi/agent/secrets.env
 
-# 2. start the attn daemon + get your address
-systemctl --user start attnd   # Linux (auto-started by installer)
-# OR: ~/.local/bin/attnd &     # manual start
+# 2. start the attn daemon
+systemctl --user start attnd   # if the installer registered the unit
+# OR:
+~/.local/bin/attnd &           # manual start
 attn status                    # → attnd address: 0x...
 
-# 3. edit .env with your address
+# 3. set your address in the bot config
 echo "PI_ADDRESS=0x..." >> ~/.pi/agent/pi-remote/.env
 
 # 4. start the Telegram bridge
 node ~/.pi/agent/pi-remote/bot/bot.js
 
-# 5. start pi (new tab / WezTerm pane)
+# 5. start pi (new tab / pane)
 pi --provider deepseek --model deepseek-v4-pro
 ```
 
-Send a message to your bot on Telegram and watch it reach pi.
+### Windows notes (installer behavior)
 
-### Windows notes
-
-On Windows (Git Bash), `--remote-stack` automatically invokes PowerShell to build the
-attn-agnostic Go daemon (the POSIX installer explicitly rejects MINGW). PowerShell must
-be available (`pwsh.exe` or `powershell.exe`). The daemon runs as a Windows Scheduled
-Task (no admin required). `~/.local/bin/attnd.exe` is the Go binary on Windows.
+`--remote-stack` on Windows (Git Bash) invokes PowerShell (`pwsh.exe` or `powershell.exe`)
+to build the attn-agnostic Go daemon. PowerShell must be available. The installer builds
+the binary at `~/.local/bin/attnd.exe` but **does not** register a Windows service or
+Scheduled Task — `ATTN_SKIP_SERVICE=1` is set so the build-only path runs. Start the
+daemon manually as shown in the bring-up sequence above.
 
 ### Updating the stack
 
@@ -460,19 +512,28 @@ pi agent (DeepSeek via @earendil-works/pi-coding-agent)
 Telegram reply to your phone
 ```
 
-### Alternative: simple standalone bot (no attn, no encryption)
+### Alternative: bundled standalone bot
 
-The `remote-control/` directory in this repo has a simpler Telegram bot with no attn
-dependency — just set a shared secret and it sends commands directly:
+The `remote-control/` directory in this repo contains a Telegram bot that also uses the
+local attn daemon (same `localhost:9742` connection, same encryption). The difference
+from `pi-remote` is operational: it is bundled in this repo — no extra clone needed. Use
+it if you want to skip `--remote-stack` and start quickly from an already-cloned
+`pi-setup`.
 
 ```bash
 cd remote-control
 npm install
-cp .env.example .env && $EDITOR .env
+cp .env.example .env && $EDITOR .env   # fill TELEGRAM_BOT_TOKEN, SUPERUSER_TG_ID, PI_ADDRESS
+source ~/.pi/agent/secrets.env          # attnd must already be running
 node telegram-bot.js
 ```
 
 See [remote-control/README.md](remote-control/README.md) for details.
+
+> **Which bot should you use?** For a fresh install, use `--remote-stack` + `pi-remote`
+> (the full stack, more actively maintained). Use `remote-control/` if you want a
+> zero-clone alternative from this repo alone. Both require the `attnd` daemon running
+> locally. Neither requires a VPS.
 
 ## Project Conventions
 

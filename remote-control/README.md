@@ -26,13 +26,17 @@ The bot polls Telegram's API from your machine. Messages route through the attn 
 2. **Your Telegram User ID**: Message [@userinfobot](https://t.me/userinfobot), it'll tell you your numeric ID
 3. **Your Pi Address**: Run `curl localhost:9742/status` — the `address` field is your pi's attn address
 
-## Multi-User Setup
+## When to use this vs pi-remote
 
-For multiple users (friends, family), each person needs:
-- Their own Telegram bot token from @BotFather
-- Their pi address added to the bridge's authorized list
+This bot (`remote-control/telegram-bot.js`) is the bundled option — works from this
+repo alone with no extra clones. It uses the local attn daemon (same encryption).
 
-Alternatively, use the [pi-remote](https://github.com/TopengDev/pi-remote) Docker setup on a VPS for a multi-tenant hosted bridge.
+The [pi-remote](https://github.com/TopengDev/pi-remote) bot is the full-stack option,
+installed via `./install.sh --remote-stack`. It is more actively maintained. For a fresh
+install, prefer `--remote-stack`.
+
+For multi-user / multi-tenant hosting (serving several people from one server), pi-remote
+also ships a Docker setup suitable for VPS deployment.
 
 ## Features
 
