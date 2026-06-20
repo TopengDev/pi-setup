@@ -398,7 +398,7 @@ for sd in sorted(referenced_subdirs):
 # validate each entry against pi's known tools and WARN (not FAIL) on an unknown
 # token — it could be a future tool, and a wrong allowlist entry only narrows a
 # skill's tools, it doesn't break the loader.
-PI_TOOLS = {"read","bash","edit","write","grep","find","ls","skill"}
+PI_TOOLS = {"read","bash","edit","write","grep","find","ls","skill","glob","websearch","webfetch","askuserquestion"}
 at = fm.get("allowed-tools")
 if at is not None:
     if isinstance(at, str):
