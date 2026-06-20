@@ -448,6 +448,105 @@ Then follow that level's protocol.
 
 2026-05-23/24: Workers ran 30+ min on wrong direction with zero visibility. No hierarchy → impossible to navigate. No STATE.md → couldn't course-correct mid-flight. Ad-hoc documentation → knowledge lost between sessions.
 
+## Worker Orchestration Tooling
+
+Additive tooling on top of the spawn pipeline. All scripts live in `{{SCRIPTS_DIR}}/`. Backward-compatible with existing spawn/brief callers.
+
+### Worker resume (killed / session-limit recovery)
+
+**A worker that dies mid-task RESUMES from its last checkpoint — it does not redo work.**
+
+- **Checkpoints (idempotent, resumable):** Decompose tasks into idempotent sub-steps. Mark `[x]` ONLY after verifying the effect landed (file written + re-read, command exit 0 + output asserted). The **Resume cursor** line in STATE.md points at the first incomplete checkpoint.
+- **Resume protocol (every (re)start):** read STATE.md FIRST → trust `[x]` checkpoints and skip them → cheaply re-verify the last `[x]` still holds → continue from the first `[ ]`.
+- **`resume-worker.sh <pane_name> <task_dir> [--with-brief <orig_brief>]`** re-briefs a window with a RESUME preamble, delegates delivery to `brief-worker.sh`.
+
+### Structured worker results (`result.json`)
+
+On completion (or terminal block), a full-path worker writes `result.json` next to STATE.md in addition to `report.md`. Schema: `{ task_slug, status (done|blocked|partial), summary, deliverables[], evidence[], blockers[], followups[], staged_for_human[] }`. Validate with `result-schema.sh <dir|file>`. NOT required for L1 tasks.
+
+### Concurrency governor
+
+`spawn-worker.sh` refuses to spawn if at/over **`PI_MAX_WORKERS`** (default 6) live workers. Override: `PI_MAX_WORKERS=8 spawn-worker.sh ...` or queue with `PI_SPAWN_WAIT=120 spawn-worker.sh ...`. Refusal exits 5. Logic in `worker-semaphore.sh` (`worker-semaphore.sh status` to inspect).
+
+### FleetView (live cockpit)
+
+**`fleetview.sh`** — read-only one-screen dashboard of all active workers: STATE.md status + mtime (STALLED if no update in >10 min while active), checkpoint progress, Resume cursor, capacity (N/max). `--watch [secs]` to refresh. NEVER acts on a worker.
+
+### Workflow library
+
+`{{SCRIPTS_DIR}}/workflows/` — playbooks for multi-worker patterns: **fan-out-review**, **recon-implement-verify**, **loop-until-green**. **`scaffold-workflow.sh <pattern> <run-slug>`** writes the pre-spawn artifacts (per-worker task dir with triage.json + STATE.md + role-shaped brief.md) and prints exact spawn/brief commands. See `workflows/README.md`.
+
+## Supervisor Orchestration Layer — main → supervisor → workers
+
+**OVERRIDE: For a FLEET or LONG-RUNNING initiative, main spawns a SUPERVISOR that owns the orchestration — so main stays free as the user's conversation partner.**
+
+```
+user ──► main (discussion + delegation)
+           │ spawns (fleets / long-running initiatives only)
+           ▼
+      supervisor (idle-cheap / event-driven, one per initiative)
+           │ delegates + polls + re-spawns
+           ▼
+      workers (1..N)
+```
+
+### When to spawn a supervisor (NOT every task)
+
+- **Spawn one** for: a FLEET (multiple workers) OR a long-running initiative (L3, or L2 with a fleet / multi-hour horizon).
+- **Do NOT** for a single-shot L1/L2 task — main spawns the worker directly.
+
+### The contract
+
+- **Spawn:** `spawn-supervisor.sh <pane_name> [cwd] [task_dir]` — same triage gate (L3 still needs sign-off), separate supervisor cap; then brief with `brief-worker.sh --supervisor <pane_name> <brief-file>`.
+- **Delegates, doesn't execute:** the supervisor decomposes the initiative and spawns workers. It does NOT execute implementation itself.
+- **Idle-cheap / event-driven:** after spawning the fleet it WAITS, waking to reason only on real events (result.json, stall, milestone, decision). No busy-poll.
+- **Reports only meaningful checkpoints to main via attn:** (1) DIRECTION plan BEFORE spawning the fleet, (2) milestone boundaries, (3) blockers needing the user's decision, (4) DONE. Does NOT relay every worker ping.
+- **Single interface to the user:** the supervisor NEVER DMs the user. Escalations go supervisor → main → user. Main is the sole relay.
+- **Resumable:** the supervisor's STATE.md carries Fleet roster + orchestration checkpoints. If the supervisor dies, it re-reads the ledger and re-attaches to its fleet — does NOT re-spawn done/in-flight workers.
+
+### Concurrency caps
+
+Supervisor cap = **4** (`PI_MAX_SUPERVISORS`). Worker pool = **6 GLOBAL/shared** (`PI_MAX_WORKERS`) across ALL supervisors + main — NOT multiplied per supervisor. Tracked in separate registries by `worker-semaphore.sh`; `fleetview.sh` renders both.
+
+## STATE.md Checkpoint Protocol (MANDATORY)
+
+Workers maintain STATE.md as a resumable journal. Template: `{{NOTES_DIR}}/templates/STATE.md`.
+
+### Required STATE.md sections
+
+```markdown
+**Name:** <task slug>
+**Status:** PENDING | IN_PROGRESS | BLOCKED | COMPLETE
+**Parent initiative:** <slug or "L1-none">
+**Worker:** <pane name>
+**Created:** <date>
+**Updated:** <date>
+
+## Starting point
+<what was in place when the worker started>
+
+## Roadmap
+- [ ] checkpoint 1
+- [x] checkpoint 2  <!-- verified: <proof> -->
+- [ ] checkpoint 3
+
+## Resume cursor
+checkpoint 3
+
+## Completed
+<done steps with evidence>
+
+## Blockers
+<any hard blockers>
+```
+
+### Checkpoint discipline
+
+- Mark `[x]` ONLY after verifying the effect actually landed.
+- Proof inline: `<!-- verified: cat /path/file shows expected content -->`.
+- Non-idempotent actions (push/publish/deploy) are GUARDED: check on resume so they never double-fire.
+- Update **Resume cursor** line to the first incomplete checkpoint after every state change.
+
 ## Website Build Defaults — i18n + Multi-Theme (MANDATORY)
 
 **OVERRIDE: Every website / web app / landing page / marketing site built for {{ORG_NAME}} ecosystem MUST ship with i18n + multi-theme support out of the box. Non-negotiable. From commit 0. Not v2. Not MVP-first. Not "we'll add it later".**

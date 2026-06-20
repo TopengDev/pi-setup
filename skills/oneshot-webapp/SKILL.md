@@ -1,6 +1,6 @@
 ---
 name: oneshot-webapp
-description: One-shot a pitch-grade web app or landing page from a brief and deploy it live to a <slug>.topengdev.com subdomain. Next.js + Tailwind + shadcn, designed via /frontend-design (SAFE preset — Japanese Minimal / Warm Craft / Editorial Luxury / Soft Structuralism — light-only, no dark), then docker + nginx + certbot on the VPS. Use when The User says /oneshot-webapp, asks to build+deploy a demo/pitch site, or main handles a build-on-demand request.
+description: One-shot a pitch-grade web app or landing page from a brief and deploy it live to a <slug>.topengdev.com subdomain. Next.js + Tailwind + shadcn, designed via /frontend-design (SAFE preset — Japanese Minimal / Warm Craft / Editorial Luxury / Soft Structuralism — light-only, no dark), then docker + nginx + certbot on the VPS. Use when the user says /oneshot-webapp, asks to build+deploy a demo/pitch site, or main handles a build-on-demand request.
 argument-hint: <brief — what to build, who it's for, any market/language/feature requirements>
 ---
 
@@ -10,7 +10,7 @@ Take a brief and, in a SINGLE session, produce a polished, real-feeling web app 
 
 This is for **pitches and recruiter build-on-demand requests** (demo builds, one-shot asks). The output must look like a real product a paying client would ship — not a generic AI scaffold.
 
-> **Host note:** pi runs on **Windows + Git Bash**. The BUILD + DESIGN guidance in this skill is host-agnostic and applies everywhere. The DEPLOY mechanics (sections marked **[VPS-specific]**) assume The User's specific VPS + the `topengdev.com` Cloudflare zone, driven over SSH from Git Bash — `ssh`/`scp`/`curl`/`sshpass`/`tar` all work in Git Bash, so the remote deploy runs fine from pi. If you are deploying to a DIFFERENT host, treat those sections as a template and adapt the DNS/nginx/cert/SSH details to your own infrastructure — don't run them verbatim against an unrelated host. Credentials are auto-sourced from `~/.pi/agent/secrets.env`.
+> **Host note:** pi runs on **Windows + Git Bash**. The BUILD + DESIGN guidance in this skill is host-agnostic and applies everywhere. The DEPLOY mechanics (sections marked **[VPS-specific]**) assume the user's specific VPS + the `topengdev.com` Cloudflare zone, driven over SSH from Git Bash. If deploying to a DIFFERENT host, treat those sections as a template and adapt the DNS/nginx/cert/SSH details to your own infrastructure — don't run them verbatim against an unrelated host. Credentials are auto-sourced from `~/.pi/agent/secrets.env`.
 
 ═══════════════════════════════════════════════════════════════════════════
 ## ⛔ NON-NEGOTIABLE RULES — READ FIRST, THESE OVERRIDE EVERYTHING BELOW
@@ -26,7 +26,7 @@ These are HARD rules. Violating any one is a failed build, not a stylistic choic
    - **Soft Structuralism** (VARIANCE 4 / MOTION 5 / DENSITY 5)
    - **Editorial Luxury** (VARIANCE 6 / MOTION 4 / DENSITY 4) ← ProjectBeta used this, came out clean.
 
-   **BANNED unless The User explicitly overrides in this run's brief:** Neo-Brutalist, Magazine Editorial, Dark Cinematic, Gen Z Expressive, Playful Pop, Anti-Design, art-deco/geometric, maximalist, and any other high-variance (VARIANCE ≥ 7) or expressive direction. These are execution-sensitive and have been rejected ("looked SO BAD" — art-deco RecruitCo/ProjectAlpha demo, 2026-05-29). Pick ONE safe preset and commit to it.
+   **BANNED unless explicitly overridden in this run's brief:** Neo-Brutalist, Magazine Editorial, Dark Cinematic, Gen Z Expressive, Playful Pop, Anti-Design, art-deco/geometric, maximalist, and any other high-variance (VARIANCE ≥ 7) or expressive direction. These are execution-sensitive and have been rejected ("looked SO BAD" — art-deco RecruitCo/ProjectAlpha demo, 2026-05-29). Pick ONE safe preset and commit to it.
 
 3. **LIGHT MODE ONLY. NO DARK MODE. NO THEME SWITCHER.** Do not add `next-themes`, a dark palette, a `dark:` variant set, or a theme toggle. Light is the only theme. (This intentionally overrides the `/frontend-design` light+dark baseline — see "Baseline override".)
 
@@ -36,7 +36,7 @@ These are HARD rules. Violating any one is a failed build, not a stylistic choic
 
 6. **DEPLOY TO `<slug>.topengdev.com`. [VPS-specific]** Final live URL is always `https://<slug>.topengdev.com` (a clean, short, hyphenated slug derived from the app/company name). Not a raw IP, not localhost. HTTPS via certbot, behind nginx + Cloudflare. (Different host → adapt the domain + ingress to your own setup.)
 
-> If the brief asks for something that breaks one of these (e.g. "make it dark mode", "use a bold brutalist look"), do NOT silently comply. Either the brief is from The User explicitly overriding (rule 2/3 allow an explicit The User override — honor it and note it in the report), or flag the conflict. Default = obey the non-negotiables.
+> If the brief asks for something that breaks one of these (e.g. "make it dark mode", "use a bold brutalist look"), do NOT silently comply. Either the brief explicitly overrides the non-negotiables (rule 2/3 allow an explicit override — honor it and note it in the report), or flag the conflict. Default = obey the non-negotiables.
 
 ═══════════════════════════════════════════════════════════════════════════
 ## ✅ GATE 1 — PRE-FLIGHT (satisfy ALL before writing any app code)
@@ -45,7 +45,7 @@ These are HARD rules. Violating any one is a failed build, not a stylistic choic
 Do not start scaffolding until every box is a definite YES (or a logged, intentional exception):
 
 - [ ] **Scope is the smallest pitch-landing shape** — a landing page (hero + 3–5 sections + CTA) OR a focused app (one strong hero flow + 1–2 supporting views). NOT a sprawling multi-module app, auth system, real DB, or payments.
-- [ ] **ONE safe preset chosen** from the four allowed (Japanese Minimal / Warm Craft / Editorial Luxury / Soft Structuralism), matched to brand tone. High-variance NOT chosen (unless The User explicitly overrode in-brief — then logged).
+- [ ] **ONE safe preset chosen** from the four allowed (Japanese Minimal / Warm Craft / Editorial Luxury / Soft Structuralism), matched to brand tone. High-variance NOT chosen (unless explicitly overridden in-brief — then logged).
 - [ ] **Dark mode is NOT in the plan.** No `next-themes`, no theme toggle, no dark palette.
 - [ ] **Locale decided** — single locale in the brief's language (Bahasa for Indonesian audience, English for a recruiter demo; default English). next-intl/multi-locale ONLY if the brief explicitly needs 2+ languages.
 - [ ] **Slug derived** — lowercase, hyphenated, short, no spaces. Final URL = `https://<slug>.topengdev.com`.
@@ -82,8 +82,8 @@ Pitch-grade means NOT looking like every other AI scaffold. Force a committed, d
 
 ## When this runs
 
-- **Manual:** The User invokes `/oneshot-webapp <brief>` directly.
-- **Build-on-demand (recruiter/partner):** main relays a request from a pre-authorized requester. SAFE preset, NO dark mode, deploy to a `*.topengdev.com` subdomain, and **notify The User via Telegram on each build** (start + finished URL). pi's notification channel is **Telegram**, not WhatsApp.
+- **Manual:** user invokes `/oneshot-webapp <brief>` directly.
+- **Build-on-demand (recruiter/partner):** main relays a request from a pre-authorized requester. SAFE preset, NO dark mode, deploy to a `*.topengdev.com` subdomain, and **notify the user via Telegram on each build** (start + finished URL). pi's notification channel is **Telegram**, not WhatsApp.
 
 If invoked from main (discussion-only session), this is real implementation work → it should run in a **spawned worker** (a WezTerm worker tab — see the `wezterm` skill), not main. If you ARE the worker that received this brief, execute it directly; do not re-delegate.
 
@@ -103,7 +103,7 @@ Before scaffolding, pin down (ask only if genuinely blocking — otherwise pick 
 
 ## Baseline override (IMPORTANT — you are intentionally departing from /frontend-design defaults)
 
-The `/frontend-design` skill MANDATES an i18n + multi-theme (light+dark) baseline for Acme-ecosystem sites. **This skill overrides that** for one-shot pitch demos, on The User's explicit standing directive:
+The `/frontend-design` skill MANDATES an i18n + multi-theme (light+dark) baseline for Acme-ecosystem sites. **This skill overrides that** for one-shot pitch demos, per standing directive:
 
 - **Light mode only, no dark, no theme switcher** (NON-NEGOTIABLE 3).
 - **Single locale** in the brief's language — no next-intl unless the brief needs 2+ languages.
@@ -166,7 +166,7 @@ It's a demo, so it must **feel real**, not lorem-ipsum:
 
 ### Phase 5 — Deploy to `<slug>.topengdev.com` [VPS-specific]
 
-> Everything in this phase assumes The User's VPS + the `topengdev.com` zone, driven over SSH from Git Bash. For a different host, adapt the DNS/SSH/nginx/cert specifics. This is consistent with pi's "never code on the VPS — deploy built source via SSH/git" rule: you ship a built-from-local source tree to `~/apps/<slug>` and build it IN a container; you never hand-edit code on the VPS.
+> Everything in this phase assumes the user's VPS + the `topengdev.com` zone, driven over SSH from Git Bash. For a different host, adapt the DNS/SSH/nginx/cert specifics. This is consistent with pi's "never code on the VPS — deploy built source via SSH/git" rule: you ship a built-from-local source tree to `~/apps/<slug>` and build it IN a container; you never hand-edit code on the VPS.
 
 Use the helper: **`bash ~/.pi/agent/skills/oneshot-webapp/deploy.sh <slug> ~/.pi/agent/repositories/<slug> [--env <local-env-file>] [--port <port>] [--email <addr>]`**. It is idempotent and replicates the proven pattern below. If you prefer or the helper hits an edge case, run the steps manually — the helper is the source of truth for the *sequence*, this section for the *facts*. `deploy.sh` already: creates the CF A record idempotently, ships source via rsync→tar fallback, builds in-container, picks a free port, writes+tests the nginx vhost (rolls back on `nginx -t` failure), and issues TLS via certbot — all using the non-interactive `rsudo` helper.
 
@@ -236,12 +236,12 @@ VPS host = `$VPS_HOST`. **Do NOT disrupt other services** — app-cv / app-trade
 3. **Content check (the gotcha):** confirm the served page is actually YOUR app — grep the `<title>`/hero text. **Right after deploy the domain can briefly serve a STALE title** (Cloudflare/routing settling). If the title is wrong, wait ~20–30s and re-verify before believing it. Don't report a URL until the content matches.
 4. **Local resolver lag** — a freshly-created A record may not have propagated to the local resolver yet. A `000` from `curl https://<slug>.topengdev.com` locally does NOT mean the deploy failed. Confirm with an origin check (`curl --resolve <slug>.topengdev.com:443:$VPS_HOST …`) + public DoH (`cloudflare-dns.com/dns-query?name=…`). A live browser screenshot may also show a DNS error even when the site is up — screenshot localhost (identical build) + grep the live HTML over the CF edge instead.
 5. Visual: screenshot the live site (or localhost identical build, via pi's Playwright MCP) and eyeball the design quality (NON-NEGOTIABLE 1).
-6. If the demo has an AI feature: fire the real flow live once (confirm real model path, not just fallback) AND confirm the fallback works. Then **reset the demo to a clean seed** so The User opens a pristine state.
+6. If the demo has an AI feature: fire the real flow live once (confirm real model path, not just fallback) AND confirm the fallback works. Then **reset the demo to a clean seed** so the user opens a pristine state.
 7. Re-verify other services are intact: `curl -I https://app-cv.topengdev.com` → 200, `docker ps` shows acme/recruitco/etc still up.
 
 ### Phase 7 — Report
 
-Report the **live URL** + what was built, the **safe preset used** (one of the four), anything cut for scope, the baseline override (light-only/single-locale + why), AI-feature status + fallback, and verification evidence (not claims — curl codes, screenshot paths, container status). If this was a build-on-demand request, send The User the finished URL via Telegram.
+Report the **live URL** + what was built, the **safe preset used** (one of the four), anything cut for scope, the baseline override (light-only/single-locale + why), AI-feature status + fallback, and verification evidence (not claims — curl codes, screenshot paths, container status). If this was a build-on-demand request, send the user the finished URL via Telegram.
 
 ---
 

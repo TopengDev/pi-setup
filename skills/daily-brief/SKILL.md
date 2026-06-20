@@ -1,13 +1,13 @@
 ---
 name: daily-brief
-description: Generate a structured daily brief (morning or evening) from tasks, work-queue, and calendar, then deliver it to The User. Invoked as "/daily-brief morning" or "/daily-brief evening" (optionally with "--dry-run").
+description: Generate a structured daily brief (morning or evening) from tasks, work-queue, and calendar, then deliver it to the user. Invoked as "/daily-brief morning" or "/daily-brief evening" (optionally with "--dry-run").
 argument-hint: morning|evening [--dry-run]
 ---
 
 # Daily Brief — morning + evening notification
 
 One-shot skill. Reads tasks + work-queue + calendar, formats a brief, delivers it
-to The User, exits. Run manually, or from a scheduler if one is wired up.
+to the user, exits. Run manually, or from a scheduler if one is wired up.
 
 **Timezone:** `Asia/Jakarta` (WIB = UTC+7) — do all time math in WIB.
 
@@ -18,7 +18,7 @@ to The User, exits. Run manually, or from a scheduler if one is wired up.
 > print** half works fully today with pi's `read`/`glob`/`bash` tools.
 >
 > 1. **Delivery channel — WhatsApp → Telegram (FLAG).** chilldawg sent the brief
->    as a WhatsApp DM via a WhatsApp MCP to a fixed The User JID. pi's comms channel
+>    as a WhatsApp DM to a fixed user JID. pi's comms channel
 >    is **Telegram**, and pi's default tool set (`read`/`bash`/`edit`/`write`/
 >    `grep`/`find`/`ls` + Playwright MCP) has **no Telegram send tool**. Until a
 >    Telegram delivery path is wired (a Telegram bot `sendMessage` curl via the
@@ -88,7 +88,7 @@ the main session notes dir instead, read it there). Parse the markdown tables
 under these section headers:
 
 - `## In-flight (worker actively running)` → `inflight` list — capture `Name`, `State`, `Last update`
-- `## Paused — awaiting The User decision` → `paused_decision` list — capture `Name`, `What's needed`
+- `## Paused — awaiting user decision` → `paused_decision` list — capture `Name`, `What's needed`
 - `## Paused — awaiting external (push, deploy, third-party)` → `paused_external` list — capture `Name`, `What's blocking`
 
 Skip `## Backlog` and `## Recently shipped` — those don't surface in the brief.
@@ -209,11 +209,11 @@ The `{summary line}` for evening: if both sections empty → `nothing scheduled,
 
 If NOT dry-run AND a Telegram delivery path is configured:
 
-Send the formatted message to The User via Telegram. The simplest pi-native path is
+Send the formatted message to the user via Telegram. The simplest pi-native path is
 a Telegram Bot API call through the `bash` tool:
 
 ```bash
-# Requires a bot token + The User's chat id (store in pi secrets, never inline):
+# Requires a bot token + the user's chat id (store in pi secrets, never inline):
 #   $TELEGRAM_BOT_TOKEN, $TELEGRAM_CHAT_ID
 curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
   --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
@@ -250,12 +250,12 @@ Then update the lock file to the current WIB minute (only on success / dry-run p
 
 - Never read the messaging inbox or reply to messages — this skill is send-only.
 - Never modify `~/.pi/agent/tasks/*.md` files — read-only.
-- Never deliver to any recipient other than The User's configured chat id.
+- Never deliver to any recipient other than the user's configured chat id.
 
 ## Done
 
 After successful send (or dry-run print), print exactly:
 ```
-DONE — {mode} brief sent to The User at {HH:MM WIB}
+DONE — {mode} brief sent to the user at {HH:MM}
 ```
 (or `DONE — {mode} brief dry-run printed` in dry-run mode).
