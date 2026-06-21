@@ -103,7 +103,7 @@ Before scaffolding, pin down (ask only if genuinely blocking — otherwise pick 
 
 ## Baseline override (IMPORTANT — you are intentionally departing from /frontend-design defaults)
 
-The `/frontend-design` skill MANDATES an i18n + multi-theme (light+dark) baseline for Acme-ecosystem sites. **This skill overrides that** for one-shot pitch demos, per standing directive:
+The `/frontend-design` skill MANDATES an i18n + multi-theme (light+dark) baseline for your product ecosystem sites. **This skill overrides that** for one-shot pitch demos, per standing directive:
 
 - **Light mode only, no dark, no theme switcher** (NON-NEGOTIABLE 3).
 - **Single locale** in the brief's language — no next-intl unless the brief needs 2+ languages.
