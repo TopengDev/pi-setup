@@ -56,7 +56,7 @@ Waiting On:
      - Contains "beacon" → `beacon.md`
      - Contains "pulse" or "pos" → `pulse.md`
      - Contains "client" or a known client name → `client_{name}.md`
-     - Contains "PT" or "company" or "legal" → `pt-example.md`
+     - Contains "PT" or "company" or "legal" → `pt-yourcompany.md`
      - Contains project-specific keywords (check INDEX.md for project descriptions)
    - **New project detection:**
      - If task mentions "client" + unrecognized name → create new `client_{name}.md` + update INDEX.md
@@ -207,7 +207,7 @@ Maintain this mapping (update as new projects are created):
 |----------|-------------|
 | beacon, landing page gen, generation pipeline | beacon.md |
 | pulse, pos, point of sale, inventory | pulse.md |
-| PT, company, legal, notaris, partner | pt-example.md |
+| PT, company, legal, notaris, partner | pt-yourcompany.md |
 | attn, s0nderlabs, elpabl0, messaging | attn.md |
 | email, mcp, imap, smtp | email-mcp.md |
 | vps, server, deploy, nginx, infrastructure | infrastructure.md |

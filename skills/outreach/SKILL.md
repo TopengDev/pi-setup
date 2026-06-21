@@ -89,7 +89,7 @@ WebSearch "<company> <product> / <person> <role> recent"   → recent signal, wh
 - For a **job post**: fetch it, extract the real stack + must-haves + the company's framing. Map your real experience to their list (honestly — see §2c).
 - For a **company/client**: understand the product + the likely pain you could solve. Find a recent signal.
 - For a **person** (recruiter/founder): role, what they're hiring for, any public posts. (For a Threads/X lead, the post itself is the signal — read it.)
-- **Cross-reference your real arsenal** in `{{MEMORY_DIR}}/` (private memory repo): `project_income_diversification_2026` (positioning: premium bilingual fullstack + native mobile + infra + AI — a rare combo; freelance = anchor), `project_example_pos_web`, the Pulse/fitest/QA project entries, and any existing `/case-study` outputs in `{{NOTES_DIR}}/case-studies/`. These are the proof-points + the honest skill inventory you draw the fit-hook from.
+- **Cross-reference your real arsenal** in `{{MEMORY_DIR}}/` (private memory repo): your active project memory entries (positioning, stack, scope), and any existing `/case-study` outputs in `{{NOTES_DIR}}/case-studies/`. These are the proof-points + the honest skill inventory you draw the fit-hook from.
 
 ### 2c. Honesty in the fit (no-yesman applies to selling too)
 The fit-hook must be **true**. Don't claim a stack the user hasn't touched or oversell the match to land the message — a fabricated fit gets exposed in the first call and burns the lead worse than a pass. If the match is partial, lead with the real overlap and be straight about the rest. (This is the no-sugarcoat rule applied to self-promotion: claim what's real, position it well, don't inflate.) If the target is a genuinely bad fit, say so — don't manufacture enthusiasm for a role that's a bad fit.
@@ -114,11 +114,11 @@ Pick the channel that fits the target + relationship. Each has a length budget �
 Default if `--channel` unset: email for a formal recruiter/agency with a known address; LinkedIn for a hiring manager; the native platform for a public-post lead (Threads/X); WhatsApp for a warm Indo contact who shared a number *(on pi, produce the draft + instruct the user to send manually via their phone)*.
 
 ### 3a. Picking the proof-point (rule 3)
-Match the proof to the target's need — don't reach for the same one every time:
-- Retail / POS / SMB-tech client → the **Pulse POS** case study (multi-tenant, offline-first, native hardware).
-- A role/client emphasizing **QA / testing / SDET** → the **fitest QA-automation** story (900+ rows, framework-bug diagnosis).
-- A **frontend / design-quality** role → a polished shipped UI (a landing/oneshot build, the design-system work).
-- **Infra / fullstack / AI** → the self-hosted stack (VPS + Docker + nginx, the AI integrations, app-trader).
+Match the proof to the target's need — don't reach for the same one every time. Look through your memory for active project entries and select the one that best maps to the target:
+- **Domain / stack overlap** → the case study for your most relevant shipped project (multi-tenant, offline-first, production scale, etc.).
+- **QA / testing / SDET** → a QA-automation or test-framework story with scale + impact numbers.
+- **Frontend / design quality** → a polished shipped UI (a landing/oneshot build, a design-system project).
+- **Infra / fullstack / AI** → a self-hosted stack or AI integration story.
 If a `/case-study` for the right project doesn't exist yet, suggest running `/case-study` first to generate the proof-point, then lead the outreach with its link/blurb. **`/case-study` --for application** emits a ready cover-blurb designed to slot straight in here.
 
 ---
@@ -270,7 +270,7 @@ Maintain a simple, greppable log at **`{{NOTES_DIR}}/outreach/tracker.md`** (cre
 
 ### Example 1 — `/outreach https://<jobpost> --type recruiter --channel email`
 1. **Research (§2):** WebFetch the post → real stack (e.g. "Next.js + Postgres, B2B SaaS, remote"), seniority, what they emphasize; WebSearch the company → they just shipped feature X. Cross-ref memory → Pulse (Next.js, multi-tenant, production) is the mapping proof.
-2. **Pick proof (§3a):** Pulse POS case study (Next.js + multi-tenant + production = direct stack/scale overlap). If no case study exists → suggest `/case-study example_pos_web --for application --role <this role>` first.
+2. **Pick proof (§3a):** your most relevant shipped project case study (Next.js + multi-tenant + production = direct stack/scale overlap in this example). If no case study exists → suggest `/case-study <project> --for application --role <this role>` first.
 3. **Draft (§4 email frame):** subject names the role + the POS hook; opener references their actual stack + the recent feature; proof-point leads with Pulse + the case-study link; fit is the honest Next.js/multi-tenant/production overlap; one ask ("worth a quick chat?").
 4. **Audit (§5 + §6):** ≥3 specifics (company name, the stack detail, the shipped-feature reference) ✓; swap-test fails-as-template? no — it's theirs ✓; zero banned phrases ✓.
 5. **Present for approval (rule 1):** show the full email + subject + recipient. **Send nothing.** Wait for "send it".

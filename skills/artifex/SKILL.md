@@ -63,9 +63,9 @@ Three rules every studied award site obeys:
 | **Method** | Pick ONE archetype, apply consistently across the page | Pick ONE base palette, VARY skeleton + technique + transition per section |
 | **Coherence from** | Sameness (one layout language) | A motif + constant type/color, over deliberate variance |
 | **Default dials** | VARIANCE 4–7, MOTION 3–6 (per archetype) | **VARIANCE 8–10, MOTION 6–9, floored** — the variance dial is bolted to the top |
-| **Best for** | Production apps, dashboards, the Acme product (needs i18n + dark mode), client sites that must be maintainable | Pitch decks, demos, launch/award sites, hero landing moments, "make it not basic" |
+| **Best for** | Production apps, dashboards, your main product (needs i18n + dark mode), client sites that must be maintainable | Pitch decks, demos, launch/award sites, hero landing moments, "make it not basic" |
 | **Risk it fails on** | Looks generic / template when the brief needed to dazzle | Over-engineered / janky / inaccessible if the gates (§7, §9) aren't enforced |
-| **Theming** | i18n + light/dark mandatory (Acme ecosystem) | Usually single-theme, single-locale (pitch/demo). Inherit the host skill's theming rule (pitch decks = light-only) |
+| **Theming** | i18n + light/dark mandatory (your product ecosystem) | Usually single-theme, single-locale (pitch/demo). Inherit the host skill's theming rule (pitch decks = light-only) |
 
 **Bright-line:** if the deliverable's #1 job is to **make someone feel something and act** (invest / adopt / hire / "wow") → `/artifex`. If its #1 job is to **work reliably and be maintained** (product UI, admin, docs) → `/frontend-design`. When a brief says "award-caliber / cinematic / immersive / ultra-engaging / not basic" → `/artifex`, full stop.
 

@@ -18,8 +18,8 @@ Turns a natural-language request into a stored, scheduled reminder.
 > - **No `CronCreate` / `ScheduleWakeup`** — pi's tool set is `read`/`bash`/
 >   `edit`/`write`/`grep`/`find`/`ls` + Playwright MCP. There is no in-agent
 >   scheduler that can wake pi at a future time.
-> - **No systemd / app-sender queue** — pi runs on **Windows** (no systemd timers,
->   no `reminder-check` service, no app-sender daemon).
+> - **No systemd queue** — pi runs on **Windows** (no systemd timers,
+>   no background reminder daemon).
 > - **WhatsApp → Telegram** — pi's comms channel is Telegram, not WhatsApp.
 >
 > **What this means:** until a host-level scheduler is wired up, pi reminders are

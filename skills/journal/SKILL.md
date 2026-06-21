@@ -68,17 +68,17 @@ echo "journaled [$TS] ($TAG) $SUMMARY"
 
 ```bash
 # a decision
-#   - [2026-06-12 14:03 WIB] (decision) Switched app-trader to Strategy E (100% TP5 + BE-trail at TP3)
+#   - [2026-06-12 14:03 WIB] (decision) Switched my-service to strategy B (details here)
 
 # feedback from the user, with detail
 #   - [2026-06-12 14:05 WIB] (feedback) user prefers hard-block over warn for git hooks
 #       Came up while dropping the redundant tsc-check hook.
 
 # a durable project fact
-#   - [2026-06-12 14:08 WIB] (project) pi-setup at HEAD <sha>, pushed to origin/master, tree clean
+#   - [2026-06-12 14:08 WIB] (project) my-repo at HEAD <sha>, pushed to origin/master, tree clean
 
 # a reference pointer
-#   - [2026-06-12 14:10 WIB] (reference) Pulse MinIO bucket = product-images on container acme-pos-minio-1
+#   - [2026-06-12 14:10 WIB] (reference) my-app S3 bucket = uploads on container my-app-storage-1
 
 # breadcrumb the audit should skip
 #   - [2026-06-12 14:12 WIB] (ephemeral) Spawned worker; round-trip verified

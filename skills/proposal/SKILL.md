@@ -58,7 +58,7 @@ Generate the proposal as a single markdown document with the following sections 
 ## Technical Proposal & Statement of Work
 
 **Prepared for:** [Client Name]
-**Prepared by:** [Our Company — ask user or use placeholder "Acme"]
+**Prepared by:** [Our Company — ask user or use placeholder "[Your Company]"]
 **Date:** [Today's date]
 **Version:** 1.0
 **Classification:** Confidential

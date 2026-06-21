@@ -165,20 +165,20 @@ Append one line to `~/.local/share/standup/log/{mode}-{YYYY-MM-DD}.log` (create 
 ## Worked examples
 
 **Example A — `/standup morning`, now Wed 2026-06-11 07:00 WIB.**
-Sources: work-queue `## Recently shipped` has 2 rows dated yesterday (`pulse-receipt-i18n shipped`, `app-trader-ocr shipped`); tasks `## NOW` has `fix CM 500 on CLIENT_A`, `re-run suite 818`; work-queue `## Paused — awaiting you decision` has `fitest-batches-6-7 — "Go" to spawn batch 6`. → Body:
+Sources: work-queue `## Recently shipped` has 2 rows dated yesterday (`app-receipt-i18n shipped`, `api-ocr-hardening shipped`); tasks `## NOW` has `fix API 500 on client-a`, `re-run suite 818`; work-queue `## Paused — awaiting you decision` has `test-batches-6-7 — "Go" to spawn batch 6`. → Body:
 ```
 🌅 standup pagi 2026-06-11
 
 ✅ kemaren closed:
-- pulse receipt i18n (4 commits, blm dipush)
-- app-trader OCR hardening (e6cd05a)
+- app receipt i18n (4 commits, blm dipush)
+- api OCR hardening (e6cd05a)
 
 🎯 hari ini:
-- fix CM 500 di CLIENT_A+CLIENT_B
-- re-run suite 818 abis fix COWORKER_A
+- fix API 500 di client-a+client-b
+- re-run suite 818 abis fix upstream bug
 
 ❓ nunggu lu mutusin:
-- spawn batch 6 fitest? (User M-Banking 20pg, est 80min)
+- spawn batch 6 tests? (20 scenarios, est 80min)
 
 ⏰ kalo gak balas dalam 1h, gw default:
 - batch 6 -> gw spawn pake brief batch-5
@@ -190,10 +190,10 @@ Sources: work-queue `## Recently shipped` has 2 rows dated yesterday (`pulse-rec
 🌙 standup malem 2026-06-11
 
 ✅ shipped hari ini:
-- 3 fitest tickets difile (CLIENT_A/CLIENT_B 500, SubPopup 422, Promo regression)
+- 3 test tickets difile (client-a 500, SubPopup 422, Promo regression)
 
 🌅 besok pagi pertama:
-- nunggu COWORKER_B re-run 818 + review tickets
+- nunggu teammate re-run 818 + review tickets
 
 📋 open threads: 3 total — lihat {{WORKSPACE_DIR}}/state/work-queue.md
 ```

@@ -153,7 +153,7 @@ It's a demo, so it must **feel real**, not lorem-ipsum:
 #### AI/LLM feature rule (MANDATORY if the demo uses an LLM — NON-NEGOTIABLE 5)
 
 - **Call the model SERVER-SIDE only** (a route handler / server action). The API key lives in container env (`~/apps/<slug>/.env`, chmod 600) — **never** shipped to the client, never baked into the image, never a `NEXT_PUBLIC_` var.
-- Reuse the existing OpenRouter setup (`anthropic/claude-sonnet-4.6`, same as app-cv). Pull the key pattern from `~/apps/app-cv/.env` on the VPS if needed. (Anthropic API key is also available as `$ANTHROPIC_API_KEY` from `~/.pi/agent/secrets.env`.)
+- Reuse the existing OpenRouter setup (`anthropic/claude-sonnet-4.6`). Pull the key pattern from `~/apps/<existing-app>/.env` on the VPS if needed. (Anthropic API key is also available as `$ANTHROPIC_API_KEY` from `~/.pi/agent/secrets.env`.)
 - **ALWAYS ship a deterministic fallback** for the exact demo scenario, so the live demo NEVER breaks if the API fails / runs out of credit / times out. Wire a visible "simulate AI failure" toggle if useful for rehearsals.
 - **Proven gotchas** (from ProjectAlpha — bake these in up front):
   - HTTP headers must be ASCII/Latin-1. An em-dash (U+2014) in an `X-Title` header throws `Cannot convert argument to a ByteString` and silently falls back. Keep headers ASCII-only.
@@ -174,13 +174,13 @@ VPS access (vars auto-sourced from `~/.pi/agent/secrets.env`):
 ```
 sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST"
 ```
-VPS host = `$VPS_HOST`. **Do NOT disrupt other services** — app-cv / app-trader / app-sender / acme(_auth/_iam/_pos/_billing) / recruitco / client-svc-a / client-svc-b. Touch ONLY your own slug's: `~/apps/<slug>/`, container `<slug>-app`, nginx vhost `<slug>.topengdev.com`, that one DNS record.
+VPS host = `$VPS_HOST`. **Do NOT disrupt other services** already running on the VPS. Touch ONLY your own slug's: `~/apps/<slug>/`, container `<slug>-app`, nginx vhost `<slug>.topengdev.com`, that one DNS record.
 
 **Proven facts (verified live 2026-05-29):**
 
-1. **DNS — a per-subdomain A record IS required.** There is NO `*.topengdev.com` wildcard. Every subdomain (recruitco, app-cv, dev, portfolio…) has its own explicit A record → `$VPS_HOST`, **proxied (orange cloud)**. Create one for your slug if it doesn't exist. The acme Cloudflare token (`$CLOUDFLARE_API_TOKEN`) **covers the topengdev.com zone** (zone id `REDACTED_CF_ZONE_ID`) — so you can create it via the API; no separate creds needed:
+1. **DNS — a per-subdomain A record IS required.** There is NO `*.topengdev.com` wildcard. Every subdomain (my-app, my-api, dev, portfolio…) has its own explicit A record → `$VPS_HOST`, **proxied (orange cloud)**. Create one for your slug if it doesn't exist. Your Cloudflare token (`$CLOUDFLARE_API_TOKEN`) **covers the topengdev.com zone** (`$CLOUDFLARE_ZONE_ID`) — so you can create it via the API; no separate creds needed:
    ```bash
-   curl -s -X POST "https://api.cloudflare.com/client/v4/zones/REDACTED_CF_ZONE_ID/dns_records" \
+   curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/dns_records" \
      -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
      -d "{\"type\":\"A\",\"name\":\"<slug>.topengdev.com\",\"content\":\"${VPS_HOST}\",\"proxied\":true}"
    ```
@@ -190,7 +190,7 @@ VPS host = `$VPS_HOST`. **Do NOT disrupt other services** — app-cv / app-trade
 
 3. **Dockerfile** (multi-stage, `node:20-alpine`, standalone) — copy the proven one from `~/.pi/agent/repositories/recruitco-ops-pm/Dockerfile` (if present; otherwise build the standard Next standalone multi-stage Dockerfile). Key points: `deps` (npm ci) → `builder` (npm run build) → `runner` (copies `.next/standalone` + `.next/static` + `public`, creates writable `/app/data`, non-root `nextjs` user, `EXPOSE`/`ENV PORT`, `CMD ["node","server.js"]`). Set its `PORT`/`EXPOSE` to your chosen port.
 
-4. **Pick a free loopback port** (recruitco=3310, app-cv=3294). Pick an unused one (scan existing nginx `proxy_pass` ports + `docker ps`); 33xx range is convention here. `deploy.sh` auto-picks if `--port` omitted.
+4. **Pick a free loopback port** (scan existing nginx `proxy_pass` ports + `docker ps` to find what's in use); 33xx range is a convenient convention. `deploy.sh` auto-picks if `--port` omitted.
 
 5. **docker build + run** on the VPS, bound to loopback only:
    ```bash
@@ -226,7 +226,7 @@ VPS host = `$VPS_HOST`. **Do NOT disrupt other services** — app-cv / app-trade
 
 7. **TLS via certbot** (rewrites the vhost to add 443 + an HTTP→HTTPS 301 redirect; auto-renews via `certbot.timer`):
    ```bash
-   sudo certbot --nginx -d <slug>.topengdev.com --non-interactive --agree-tos -m user@example.com --redirect
+   sudo certbot --nginx -d <slug>.topengdev.com --non-interactive --agree-tos -m "$CERTBOT_EMAIL" --redirect
    ```
 
 ### Phase 6 — Live verify (close the loop — do NOT trust the first curl)
@@ -237,7 +237,7 @@ VPS host = `$VPS_HOST`. **Do NOT disrupt other services** — app-cv / app-trade
 4. **Local resolver lag** — a freshly-created A record may not have propagated to the local resolver yet. A `000` from `curl https://<slug>.topengdev.com` locally does NOT mean the deploy failed. Confirm with an origin check (`curl --resolve <slug>.topengdev.com:443:$VPS_HOST …`) + public DoH (`cloudflare-dns.com/dns-query?name=…`). A live browser screenshot may also show a DNS error even when the site is up — screenshot localhost (identical build) + grep the live HTML over the CF edge instead.
 5. Visual: screenshot the live site (or localhost identical build, via pi's Playwright MCP) and eyeball the design quality (NON-NEGOTIABLE 1).
 6. If the demo has an AI feature: fire the real flow live once (confirm real model path, not just fallback) AND confirm the fallback works. Then **reset the demo to a clean seed** so the user opens a pristine state.
-7. Re-verify other services are intact: `curl -I https://app-cv.topengdev.com` → 200, `docker ps` shows acme/recruitco/etc still up.
+7. Re-verify other services are intact: spot-check one or two existing VPS apps with `curl -I https://<other-app>.topengdev.com` → 200, `docker ps` shows existing containers still up.
 
 ### Phase 7 — Report
 
@@ -270,6 +270,6 @@ Report the **live URL** + what was built, the **safe preset used** (one of the f
 
 - Worked example repo: `~/.pi/agent/repositories/recruitco-ops-pm` (Dockerfile, next.config, components.json) — if present on this host.
 - Design rules + the four safe presets: `/frontend-design` skill (`~/.pi/agent/skills/frontend-design/SKILL.md`).
-- Live example: `https://recruitco.topengdev.com`.
+- Live example: deploy your slug and the live URL will be `https://<slug>.topengdev.com`.
 - Deploy helper: `~/.pi/agent/skills/oneshot-webapp/deploy.sh` (idempotent; source of truth for the deploy *sequence*; **[VPS-specific]**).
 - Worker spawning for running this as a delegated build: the `wezterm` skill (pi's WezTerm-tab worker model).
