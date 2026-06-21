@@ -22,7 +22,7 @@ set -euo pipefail
 
 # ---- args ----
 SLUG="${1:-}"; REPO="${2:-}"; shift $(( $# >= 2 ? 2 : $# )) || true
-ENV_FILE=""; PORT=""; EMAIL="user@example.com"
+ENV_FILE=""; PORT=""; EMAIL=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --env)   ENV_FILE="$2"; shift 2 ;;
@@ -33,15 +33,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SLUG" || -z "$REPO" ]]; then
-  echo "Usage: bash deploy.sh <slug> <local-repo-dir> [--env <file>] [--port <port>] [--email <addr>]" >&2
+  echo "Usage: bash deploy.sh <slug> <local-repo-dir> [--env <file>] [--port <port>] [--email <certbot-addr>]" >&2
   exit 2
 fi
+[[ -n "$EMAIL" ]] || { echo "--email <addr> required (used for certbot TLS registration)" >&2; exit 2; }
 [[ "$SLUG" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "slug must be lowercase/hyphen only (got: $SLUG)" >&2; exit 2; }
 [[ -d "$REPO" ]] || { echo "repo dir not found: $REPO" >&2; exit 2; }
 : "${VPS_HOST:?}"; : "${VPS_USER:?}"; : "${VPS_PASSWORD:?}"; : "${CLOUDFLARE_API_TOKEN:?}"
 
 DOMAIN="${SLUG}.topengdev.com"
-ZONE_ID="REDACTED_CF_ZONE_ID"   # topengdev.com (acme token covers it)
+ZONE_ID="${CLOUDFLARE_ZONE_ID:?}"   # your topengdev.com zone id (set in secrets.env)
 VPS_IP="$VPS_HOST"
 SSH="sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST}"
 RSYNC_SSH="ssh -o StrictHostKeyChecking=accept-new"
@@ -177,4 +178,4 @@ echo
 echo "DONE → https://${DOMAIN}"
 echo "If public https is 000, your LOCAL resolver may not have cached the new A record yet — confirm public DNS with:"
 echo "  curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=${DOMAIN}&type=A'"
-echo "Verify other services intact: curl -I https://app-cv.topengdev.com"
+echo "Verify other services intact: curl -I https://<your-other-app>.topengdev.com"

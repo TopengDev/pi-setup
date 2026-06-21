@@ -50,7 +50,7 @@ If any box fails → the case study is NOT done. Fix before reporting complete.
 Read `$ARGUMENTS`. Determine three things:
 
 ### 1a. What's the subject?
-- **A whole repo** ("`/case-study {{REPOS_DIR}}/example_pos_web`") → whole-project case study.
+- **A whole repo** ("`/case-study {{REPOS_DIR}}/my-project`") → whole-project case study.
 - **A feature/subsystem inside a repo** ("the offline-sync in Pulse", "the fitest QA automation") → scoped case study; analyze only that slice but enough surrounding context to frame it.
 - **A body of work that isn't one repo** (e.g. "my BMS fitest QA work" spread across suites) → narrative case study; gather evidence from wherever it lives (notes, suites, commits) and frame the *contribution*, not a single codebase.
 - **Ambiguous / no path** → ask: "Which repo or piece of work? Point me at a path or name it." Don't guess.
@@ -116,12 +116,12 @@ grep -rIl -iE 'webhook|idempoten|migration|race|retr(y|ies)|cache|queue|cron|oau
 # config/env shape (integration surface — what it talks to)
 cat <repo>/.env.example <repo>/.env.sample 2>/dev/null
 ```
-Read the actual implementation of 2–4 of these. The "approach & key decisions" section is only credible if you understood the real code. **Cross-reference memory** — your `{{MEMORY_DIR}}/` has deep project context (e.g. `project_example_pos_web.md`, `pulse-sw-navigationpreload-oauth-doublefetch.md`, the fitest entries). Use it for the *why* behind decisions, but PII stays out of the public case study (see §3).
+Read the actual implementation of 2–4 of these. The "approach & key decisions" section is only credible if you understood the real code. **Cross-reference memory** — your `{{MEMORY_DIR}}/` has deep project context (project entries, architecture notes, the decisions log). Use it for the *why* behind decisions, but PII stays out of the public case study (see §3).
 
 ### 2e. What shipped / is it live (outcome evidence, not aspiration)
 ```bash
 # deploy reality: is it actually running? where?
-grep -rIE 'topengdev|acme|vercel|fly|railway|render' <repo> --include=*.json --include=*.ts --include=*.yml 2>/dev/null | head
+grep -rIE 'yourdomain|vercel|fly|railway|render' <repo> --include=*.json --include=*.ts --include=*.yml 2>/dev/null | head
 ```
 - Is it deployed? URL? (A live URL is the strongest outcome proof — verify it resolves if you can, but don't over-invest; note "live at X" only if true.)
 - Tests / CI present? (green CI is an outcome signal.)
@@ -147,7 +147,7 @@ A public case study is an attack surface and a leak risk. Before writing:
 - **No secrets, ever.** No keys, tokens, passwords, internal hostnames, IPs, JIDs, phone numbers, `secrets.env` contents, or `.env` values. Grep your own draft for `sk-`, `password`, `token`, `$VPS_HOST`, `@s.telegram.org`/messaging JIDs, real phone numbers.
 - **No PII** — your memory repo + notes contain real names (PARTNER_A, FRIEND_A, COWORKER_B, RECRUITER_A, client names) and private business context. The public case study must not expose people's names, private client identities, or internal infra without permission. Generalize: "a recruiter", "an enterprise banking client (under NDA)", "my co-founder" — not real names.
 - **NDA / client-confidential work** (e.g. ISI/BRI/BMS fitest, BCAS) — frame the *contribution and skills* abstractly; never expose the client's internal system details, screenshots, or anything that would breach confidentiality. When unsure whether something is shareable, ask you or default to the generalized version.
-- **Strip internal paths** — `/home/user/...`, repo-internal structure that reveals nothing useful and looks unprofessional.
+- **Strip internal paths** — `~/...` absolute home paths, repo-internal structure that reveals nothing useful and looks unprofessional.
 
 If the case study is `--for application` to a *specific* trusted recipient and the user okays naming a client, that's their call — default is generalized.
 
@@ -309,10 +309,10 @@ the industry-standard POS pattern, reached after PWA bridges hit Chrome's LNA wa
   one codebase" for a native shell I now maintain — worth it because hardware access is
   non-negotiable for POS. (Rejected the HTTP-bridge PWA approach after it kept failing.)
 - **Subscription gates the owner only; staff inherit via membership.** [why + the trade-off,
-  pulled from project_pulse_entitlement_model] ...
+  pulled from your project's entitlement model memory entry] ...
 - **Disabled Serwist navigationPreload to fix flaky OAuth.** navigationPreload double-fetched
   the redirecting OAuth callback → Google one-time code reused → ~50/50 login failures. [the
-  real fix, from the navigationpreload-oauth memory] ...
+  real fix, from your project's OAuth debugging memory entry] ...
 
 ## What shipped
 - Offline order capture + sync; multi-tenant isolation; role-based access; native
@@ -358,7 +358,7 @@ to keep the suites alive, so readability + stable locators mattered as much as c
 
 ## Key decisions & trade-offs
 - **Stable-locator + readable-scenario standard over clever-but-terse automation.** [the real
-  authoring standard, from reference_fitest_bms_authoring_standard] — traded brevity for a
+  authoring standard, from your project's test-authoring reference memory] — traded brevity for a
   suite a non-author can maintain. ...
 - **Reframed bug reports from an FE-observable angle.** [why — the QA-scope discipline] ...
 

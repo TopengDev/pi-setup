@@ -17,7 +17,7 @@ Formalizes the weekly-retro ritual. Reads the week's REAL evidence (git, work-qu
 
 ## The two non-negotiable disciplines (HARD RULES — the skill exists to enforce these)
 
-1. **ONE bottleneck per week. Not two. Not a list.** Section 3 names exactly one friction point, with a *quantified* cost (hours wasted / threads stalled / decisions missed / context lost). If you're tempted to list three, you haven't found the real one — pick the highest-cost one and cut the rest. A vague bottleneck ("too much context-switching") is a failure; a specific one ("you decision latency on app-trader patches — 2 threads paused 3+ days each") passes.
+1. **ONE bottleneck per week. Not two. Not a list.** Section 3 names exactly one friction point, with a *quantified* cost (hours wasted / threads stalled / decisions missed / context lost). If you're tempted to list three, you haven't found the real one — pick the highest-cost one and cut the rest. A vague bottleneck ("too much context-switching") is a failure; a specific one ("you decision latency on auth-service patches — 2 threads paused 3+ days each") passes.
 
 2. **ONE behavioral change per week. Specific, triggered, measurable.** Section 4 commits to exactly one change. It MUST have a concrete **trigger** ("when a thread is paused >48h"), a concrete **action** ("send a one-line nudge with explicit default + 24h timer"), and a **hypothesis** ("paused-thread age drops below 48h median"). Banned: "communicate better", "be more proactive", "improve X" — these are not changes, they're wishes. If the change can't be evaluated next Sunday with a yes/no "did it stick?", rewrite it.
 
@@ -50,17 +50,17 @@ TZ=Asia/Jakarta date +"%Y-%m-%d"                      # window end (today)
 Per `feedback_weekly_retro`, pull from ALL of these. Evidence-free retro sections are not acceptable.
 
 ```bash
-# 1. Shipped-work signal across active repos (run per repo under ~/claude/Git/repositories/)
-for r in ~/claude/Git/repositories/*/; do
+# 1. Shipped-work signal across active repos (run per repo under {{REPOS_DIR}}/)
+for r in {{REPOS_DIR}}/*/; do
   [ -d "$r/.git" ] && printf '\n=== %s ===\n' "$r" && git -C "$r" log --since="7 days ago" --pretty=format:'%ad %h %s' --date=short 2>/dev/null
 done
 ```
 
-- **Shipped (Section 1):** the git log above + work-queue `## Recently shipped` rows + `result.json` files with `status:done` in `~/claude/notes/*/` modified this week. Build the per-day table: Day | Task | Outcome | Evidence(commit/path).
+- **Shipped (Section 1):** the git log above + work-queue `## Recently shipped` rows + `result.json` files with `status:done` in `{{NOTES_DIR}}/*/` modified this week. Build the per-day table: Day | Task | Outcome | Evidence(commit/path).
 - **Stalled/dropped (Section 2):** `{{WORKSPACE_DIR}}/state/work-queue.md` → `## Paused — awaiting you decision` + `## Paused — awaiting external …` (paused-since dates), plus any `result.json` with `status:blocked`/`partial`. Compute `days paused` from the paused-since date. **Flag anything paused >5 days** for a kill-vs-resume call.
 - **Decisions audit (feeds Section 3/6):** `{{WORKSPACE_DIR}}/state/decisions.log` rows within the window — especially `overridden: y` rows (a defaulted decision you later reversed is a strong bottleneck signal) and clusters of defaults on the same slug (decision latency).
 - **Journal (feeds everything):** `{{MEMORY_DIR}}/journal.md` entries within the window — `decision`/`feedback`/`project` tags are the week's narrative. This is the richest single source for "what actually happened". (Capture half of the journal→audit loop; see `/journal`.)
-- **Notes (Section 1/2 detail):** skim `~/claude/notes/*/report.md` modified this week for major outcomes.
+- **Notes (Section 1/2 detail):** skim `{{NOTES_DIR}}/*/report.md` modified this week for major outcomes.
 - **Memory diffs (Section 5):** files added/modified in `{{MEMORY_DIR}}/` this week:
   ```bash
   find {{MEMORY_DIR}} -name '*.md' -mtime -7 -printf '%TY-%Tm-%Td  %p\n' | sort
@@ -146,7 +146,7 @@ CronCreate(cron="58 9 * * 0", recurring=true, durable=true,
 
 `/retro`, now Sun 2026-06-14 ~20:00 WIB, ISO week `2026-W24`, prior retro `retro_2026-W23.md` exists.
 
-- **Evidence:** git log shows 9 commits across example_pos_web (3) + chilldawg-setup (4) + bms fitest notes (2). work-queue: `fitest-batches-6-7` paused 5 days (awaiting you "Go"); `pulse-billing-tenant-id-bug` paused 8 days (backlog). decisions.log: one `overridden: n` default on `bms-remaining-author`. journal: 14 entries, dominant theme = ISI fitest closeout.
+- **Evidence:** git log shows 9 commits across my-api (3) + my-app (4) + test-notes (2). work-queue: `feature-batches-6-7` paused 5 days (awaiting you "Go"); `billing-bug` paused 8 days (backlog). decisions.log: one `overridden: n` default on `auth-handler`. journal: 14 entries, dominant theme = QA test closeout.
 - **Section 3 bottleneck:** "you decision latency on `fitest-batches-6-7` — paused 5 days awaiting a one-word 'Go', blocking ~6h of queued authoring." (cost quantified: 5 days + 6h).
 - **Section 4 change:** Trigger = "any thread paused >48h awaiting a you yes/no". Action = "morning standup surfaces it with an explicit 1h-default + auto-proceed". Hypothesis = "paused-decision median age drops under 48h; measured from work-queue paused-since dates next retro."
 - **Did last week's change stick?** Last week (W23) committed "send a nudge for >48h paused threads". Evidence: 2 nudges in journal (`feedback`-tagged), 1 thread resumed within 24h of nudge. Verdict: PARTIAL (nudges fired but one thread still aged out). Carry-over: evolve into the standup-default mechanism above.

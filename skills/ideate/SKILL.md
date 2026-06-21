@@ -119,7 +119,7 @@ After the header, branch:
    - **Users & personas** — primary/secondary users, technical level, day-in-the-life before vs after.
    - **User flows & features** — the core journey end-to-end; must-haves vs nice-to-haves; decision points; **edge cases + failure states**.
    - **Business model** (if a product) — how it makes money, pricing intuition, growth loop.
-   - **Constraints & context** — stack preferences, budget/timeline, integrations (APIs/services), **deployment target (VPS / Vercel / local / standalone)**, regulatory/compliance, **does it touch existing infra** (the market-events "don't disturb app-trader" invariant lives here).
+   - **Constraints & context** — stack preferences, budget/timeline, integrations (APIs/services), **deployment target (VPS / Vercel / local / standalone)**, regulatory/compliance, **does it touch existing infra** (e.g. "don't disturb existing services" invariants live here).
    - **Competitive landscape** — who else, the differentiation, what to learn from them.
    - **The riskiest assumption** — explicitly ask: "what's the one thing that, if false, kills this?" This seeds the Phase 2 prototype.
 3. **Expansion loop.** After each round: surface branches the answers opened, ask follow-ups, confirm in-scope vs out-of-scope. Repeat until the user says "that's everything" or the vision is complete **AND (for L3) the question count is ≥10**.
@@ -131,7 +131,7 @@ Research thoroughly (ultra-thorough per your `CLAUDE.md`: official docs, context
 - **Market** — existing solutions, pricing, weaknesses, size indicators.
 - **Technical feasibility** — buildable with the proposed stack? risky dependencies? the hardest technical problem — is it solvable? (This *names* the risk; Phase 2 *tests* it.)
 - **Effort vs impact** — rough complexity (simple/moderate/complex/massive), MVP speed, impact-to-effort.
-- **Alignment** — fits Acme direction? bandwidth? timing?
+- **Alignment** — fits your product direction? bandwidth? timing?
 
 Emit `docs/ideation/02-validation.md` with a verdict: **GO / PIVOT / PARK**. PIVOT → adjust vision, re-validate. PARK → save to `/tasks` as a LATER item and STOP the flow (no gate, no build).
 
@@ -206,7 +206,7 @@ Only after sign-off (L3) / after the short plan (L2). Materialize the **real** 3
 3. **Per-milestone task dirs** `{{NOTES_DIR}}/<task-slug>-<date>/` — each with: its own `triage.json`, a **`STATE.md`** copied from `{{NOTES_DIR}}/templates/STATE.md` (fill NAME, worker name, **Parent initiative** link, starting point, roadmap, **Checkpoints** section), and a **`brief.md`** (the equipped task hand-off — see Phase 5). The task slug must reference the parent initiative for navigability.
 4. **`TaskCreate`** each milestone with the parent initiative slug in the description (full path; L1 may skip).
 5. **Scaffold shortcut (optional):** for a clean fan-out of phase workers, `{{SCRIPTS_DIR}}/workflows/scaffold-workflow.sh <pattern> <run-slug>` writes the per-worker task dirs (triage.json + STATE.md + role-shaped brief.md stub) and prints the exact spawn/brief commands. You still fill each brief's Task section. (`recon-implement-verify` fits the prototype→build→verify shape; `fan-out-review` fits the /audit milestone.)
-6. **`/project-init`** to scaffold the repo when the build needs a fresh codebase — `/project-init <project-name> <nextjs|go|python>` creates `{{REPOS_DIR}}/<project>/`. The `docs/ideation/` docs then move into that repo. **If the build is a website/web app, the i18n + multi-theme + (for Acme products) Website Build Defaults in your `CLAUDE.md` apply** — bake them into the milestone briefs from milestone 0.
+6. **`/project-init`** to scaffold the repo when the build needs a fresh codebase — `/project-init <project-name> <nextjs|go|python>` creates `{{REPOS_DIR}}/<project>/`. The `docs/ideation/` docs then move into that repo. **If the build is a website/web app, the i18n + multi-theme Website Build Defaults in your `CLAUDE.md` apply** — bake them into the milestone briefs from milestone 0.
 
 ---
 

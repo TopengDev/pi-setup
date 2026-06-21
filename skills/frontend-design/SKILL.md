@@ -9,18 +9,18 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 
 ## 0. CRITICAL META-RULE — Working References First
 
-**Working references first.** When implementing a landing / marketing / design-heavy page, check if there's an existing WORKING landing in the user's repo family FIRST. If yes, read it end-to-end, diff its approach vs the new target, and port the proven pattern. Do not reinvent scroll-reveal / motion / hydration strategy from scratch when a proven one exists adjacent. The canonical working reference for the Acme/Pulse codebase family is `~/.pi/agent/repositories/orca-design-landing/` (adapt this path to wherever the reference landing lives on your host; if no working reference exists locally, fall back to the patterns in §9.5).
+**Working references first.** When implementing a landing / marketing / design-heavy page, check if there's an existing WORKING landing in the user's repo family FIRST. If yes, read it end-to-end, diff its approach vs the new target, and port the proven pattern. Do not reinvent scroll-reveal / motion / hydration strategy from scratch when a proven one exists adjacent. If a working reference landing exists in your repos, note its path and port the proven pattern. Fall back to the patterns in §9.5 if no working reference exists locally.
 
 ---
 
 ## 0.5 CRITICAL META-RULE — i18n + Multi-Theme Mandatory Baseline
 
-**Every website / web app / landing page / marketing site for the Acme ecosystem MUST ship with i18n + multi-theme support out of the box. Non-negotiable from commit 0. No "MVP first, add later." No exceptions for customer-facing sites.**
+**Every website / web app / landing page / marketing site for your product ecosystem MUST ship with i18n + multi-theme support out of the box. Non-negotiable from commit 0. No "MVP first, add later." No exceptions for customer-facing sites.**
 
 ### i18n requirements
 
 - **next-intl** for Next.js projects. `[locale]` route segment + middleware. (Other frameworks: equivalent locale-aware routing.)
-- **Minimum locales**: `id` (Indonesian, DEFAULT — Acme target market is Indonesia) + `en` (English, secondary).
+- **Minimum locales**: `id` (Indonesian, DEFAULT — adjust to your target market) + `en` (English, secondary).
 - **No hardcoded strings** in components. Every user-facing string in `messages/<locale>.json`, accessed via `useTranslations()` (or `getTranslations()` in server components).
 - **Auth flows + form errors + toast messages + 404/error pages** all translated. NO English-only error strings.
 - **hreflang metadata** on every page for SEO.
@@ -56,7 +56,7 @@ If any gate fails → build NOT done. Fix before reporting complete.
 
 2026-05-24: A Pulse landing redesign was built English-only + single-light-theme. the user rejected the entire output ("just kill the worker, we will not continue it"). Lost ID locale + lost dark mode compounded the rejection beyond just aesthetic — even with iteration, missing these baselines made the work unsalvageable. Indonesian market + premium product = bilingual + dark mode out of the box. Always.
 
-> **Note:** The `/oneshot-webapp` skill deliberately OVERRIDES this baseline (light-only, single-locale) for pitch/demo builds. That override is intentional and scoped to that skill — it does not relax this rule for Acme-ecosystem product sites.
+> **Note:** The `/oneshot-webapp` skill deliberately OVERRIDES this baseline (light-only, single-locale) for pitch/demo builds. That override is intentional and scoped to that skill — it does not relax this rule for your ecosystem's product sites.
 
 ---
 

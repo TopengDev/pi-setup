@@ -29,8 +29,8 @@ Check if `~/.pi/agent/invoices/config.json` exists. If it does, read it. If it d
     "name": "Your Company Name",
     "address": "Jakarta, Indonesia",
     "phone": "+62 XXX-XXXX-XXXX",
-    "email": "billing@example.com",
-    "website": "https://acme.com",
+    "email": "billing@yourcompany.com",
+    "website": "https://yourcompany.com",
     "npwp": "XX.XXX.XXX.X-XXX.XXX"
   },
   "bank": {
@@ -604,7 +604,7 @@ When generating the HTML, adapt the template based on the actual data:
 Convert the HTML to PDF using Google Chrome in headless mode:
 
 ```bash
-google-chrome-stable --headless --disable-gpu --no-sandbox --print-to-pdf="/home/user/Documents/invoices/{{INVOICE_NUMBER}}.pdf" --no-pdf-header-footer --print-to-pdf-no-header /tmp/invoice-{{INVOICE_NUMBER}}.html 2>/dev/null
+google-chrome-stable --headless --disable-gpu --no-sandbox --print-to-pdf="~/Documents/invoices/{{INVOICE_NUMBER}}.pdf" --no-pdf-header-footer --print-to-pdf-no-header /tmp/invoice-{{INVOICE_NUMBER}}.html 2>/dev/null
 ```
 
 If `google-chrome-stable` is not available, try these alternatives in order:
@@ -665,8 +665,8 @@ Save the invoice data as JSON at `~/.pi/agent/invoices/{{INVOICE_NUMBER}}.json`:
   "payment_terms_days": 14,
   "currency": "IDR",
   "notes": null,
-  "pdf_path": "/home/user/Documents/invoices/INV-202603-001.pdf",
-  "md_path": "/home/user/Documents/invoices/INV-202603-001.md",
+  "pdf_path": "~/Documents/invoices/INV-202603-001.pdf",
+  "md_path": "~/Documents/invoices/INV-202603-001.md",
   "created_at": "2026-03-31T10:00:00+07:00"
 }
 ```
