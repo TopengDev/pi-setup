@@ -10,3 +10,6 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# /copywriting stateful per-brand voice banks: runtime state, never committed (template + .gitkeep stay tracked)
+skills/copywriting/voice-banks/*.md
